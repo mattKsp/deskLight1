@@ -19,11 +19,11 @@ Repository is an Arduino project
 - Arduino 
 - EEPROM libary
 - Bounce library
-- CapacitiveSensor library
-- DS3231_Simple library
+- CapacitiveSensor library  https://github.com/PaulStoffregen/CapacitiveSensor
+- DS3231_Simple library  https://github.com/sleemanj/DS3231_Simple
   * DS3231 I2C address = 0x68
   * AT24C32 I2C address = 0x57
-- FastLED library
+- FastLED library  https://github.com/FastLED/FastLED
 
 ### Licence
 - Written by MTS Standish (Thurstan|mattKsp) 2016
