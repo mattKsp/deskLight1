@@ -1,5 +1,5 @@
 # deskLight1_A
-LED strip desk light by Thurstan
+LED desk light, by Thurstan
 
 Repository is an Arduino project
 
