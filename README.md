@@ -7,6 +7,7 @@ Repository is an Arduino project
 #### Hardware
 - Arduino Mini Pro board, 5V 16MHz, 1K EEPROM
   * 5v
+  * ATmega328
   * 16 MHz clock speed
   * 1K EEPROM
 - DS3231 RTC (realtime clock) with AT24C32 memory backpack
@@ -32,5 +33,5 @@ Repository is an Arduino project
 This software is provided on an "AS-IS-BASIS"
 
 ### Reference
-https://github.com/FastLED/FastLED/wiki/Pixel-reference <br> <br> 
+https://github.com/FastLED/FastLED/wiki/Pixel-reference <br> http://playground.arduino.cc/Main/CapacitiveSensor <br> 
  

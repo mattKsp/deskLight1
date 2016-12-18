@@ -123,7 +123,7 @@ void showTime() {
     leds[j] += CRGB( 0, 20, 0); //add a little green
     leds[k] += CRGB( 0, 0, 20); //add a little blue
 
-    if(_debug && _serialEnabled) {
+    #ifdef DEBUG
       Serial.print(MyDateAndTime.Hour);
       Serial.print(":");
       Serial.print(MyDateAndTime.Minute);
@@ -138,7 +138,8 @@ void showTime() {
       Serial.print("/");
       Serial.print(MyDateAndTime.Year);
       Serial.println(" ");
-    }
+    #endif
+    
     _previousMillis = currentMillis;  //save state for next time around
   }
 }
@@ -193,7 +194,11 @@ void sunRiseSetCheck() {
       _sunRiseEnabled = true;
     }
     _sunRiseSetTriggered = false;
-  Serial.println("sunRiseSetInterrupt triggered");
+    
+//    #ifdef DEBUG
+//      Serial.println("sunRiseSetInterrupt triggered");
+//    #endif
+    DEBUG_PRINT("sunRiseSetCheck - sunRiseSetInterrupt triggered")
   }
 }
 
@@ -246,19 +251,8 @@ void sunRise() {
 }
 
 void sunSet() {
-//  if(_sunRiseSetTriggered) {
-//    DateTime MyDateAndTime;
-//    MyDateAndTime = RTC.read();
-//    if(MyDateAndTime.Hour >= 12) {
-//      _sunSetEnabled = true;
-//      _sunRiseSetTriggered = false;
-//    }
-//  }
-//  if(_sunSetTriggered) {
-//    _sunSetEnabled = true;
-//    _sunSetTriggered = false; //reset for next interrupt
-//  }
   if(_sunSetEnabled) {
+    
     //if lights are currently off..
     //save state,
     //then fade eveything to start levels
@@ -268,7 +262,7 @@ void sunSet() {
     //set tomorrows sunset time
     //_sunSetEnabled = false; //switch everything off and lock the doors behind you, ..until next time
 
-    if(_debug && _serialEnabled) {
+    #ifdef DEBUG
       DateTime MyDateAndTime;
       MyDateAndTime = RTC.read();
       Serial.print("sunset enabled");
@@ -277,8 +271,8 @@ void sunSet() {
       Serial.print(":");
       Serial.print(MyDateAndTime.Minute);
       Serial.println();
-    }
+    #endif
+    
   }
-  
 }
 

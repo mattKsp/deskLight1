@@ -6,10 +6,10 @@ void mode1() {
   // draw a generic, no-name rainbow
   //static uint8_t starthue = 0;
   //fill_rainbow (struct CRGB *pFirstLED, int numToFill, uint8_t initialhue, uint8_t deltahue=5)
-  //fill_rainbow( leds + 5, NUM_LEDS - 5, --starthue, 20);
+  //fill_rainbow( leds + 5, LED_NUM - 5, --starthue, 20);
 
-  //fill_solid( leds, NUM_LEDS, CRGB(50,0,200)); 
-  //fill_solid( leds, NUM_LEDS, CRGB(50,0,200));
+  //fill_solid( leds, LED_NUM, CRGB(50,0,200)); 
+  //fill_solid( leds, LED_NUM, CRGB(50,0,200));
   //fill_gradient(T *targetArray, uint16_t startpos, CHSV startcolor, uint16_t endpos, CHSV endcolor, TGradientDirectionCode directionCode=SHORTEST_HUES)
   //fill_gradient (T *targetArray, uint16_t numLeds, const CHSV &c1, const CHSV &c2, TGradientDirectionCode directionCode=SHORTEST_HUES)  // ???
   //fill_gradient( leds, 0,  );

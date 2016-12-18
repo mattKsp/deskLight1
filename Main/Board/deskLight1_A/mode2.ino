@@ -60,7 +60,7 @@ void mode2_sub2() {
 
 void mode2_sub3() {
   //full white
-  fill_solid( leds, NUM_LEDS, CRGB(255, 255, 255)); 
+  fill_solid( leds, LED_NUM, CRGB(255, 255, 255)); 
 }
 
 
