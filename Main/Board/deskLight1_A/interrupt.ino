@@ -1,4 +1,4 @@
-/*----------------------------interrupts----------------------------*/
+/*----------------------------interrupt----------------------------*/
 //attachInterrupt(interruptPin, function, CHANGE);
 
 void setupInterrupts() {
@@ -7,13 +7,9 @@ void setupInterrupts() {
 }
 
 void sunRiseSetInterrupt() {
-  if(_firstTimeSetupDone) {
+  if(_firstTimeSetupDone) {         //hmm.. really don't think i should rely on this var
     _sunRiseSetTriggered = true;
   }
-//  #ifdef DEBUG
-//  RTC.printTo(Serial); 
-//  Serial.println(": sunRiseSetInterrupt triggered");
-//  #endif
   DEBUG_PRINT("interrupts - sunRiseSetInterrupt triggered")
 }
 

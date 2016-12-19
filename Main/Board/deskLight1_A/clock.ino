@@ -106,16 +106,16 @@ void showTime() {
   //use bytes..
   //int _hour = 3;
   //int _minute = 25;
-  //int i = map(decToInt(hr), 0, 12, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
-  //int j = map(decToInt(mins), 0, 60, _segmentStart[0], _segmentEnd[_segmentTotal-1]);
+  //int i = map(decToInt(hr), 0, 12, _segmentEnd[SEGMENT_TOTAL-1], _segmentStart[0] );
+  //int j = map(decToInt(mins), 0, 60, _segmentStart[0], _segmentEnd[SEGMENT_TOTAL-1]);
   unsigned long currentMillis = millis(); //save state
   if((unsigned long)(currentMillis - _previousMillis) >=  _showTimeUpdateInterval) {
     DateTime MyDateAndTime;
     MyDateAndTime = RTC.read();
     
-    int i = map(MyDateAndTime.Hour, 0, 12, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
-    int j = map(MyDateAndTime.Minute, 0, 60, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
-    int k = map(MyDateAndTime.Second, 0, 60, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
+    int i = map(MyDateAndTime.Hour, 0, 12, ledSegment[SEGMENT_TOTAL-1].last, ledSegment[0].first );
+    int j = map(MyDateAndTime.Minute, 0, 60, ledSegment[SEGMENT_TOTAL-1].last, ledSegment[0].first );
+    int k = map(MyDateAndTime.Second, 0, 60, ledSegment[SEGMENT_TOTAL-1].last, ledSegment[0].first );
     leds[i] = -leds[i]; //invert
     leds[j] = -leds[j]; //invert
     leds[k] = -leds[k]; //invert
@@ -230,19 +230,19 @@ void sunRise() {
     //then fade everything to black
     //..now do sun rise
     
-    int startPx0 = (0 - _segmentTotal);
+    int startPx0 = (0 - SEGMENT_TOTAL);
     int endPx0 = 0;
-    //map(int hour, 0, 12, _segmentStart[0], _segmentEnd[_segmentTotal-1]);
+    //map(int hour, 0, 12, _segmentStart[0], _segmentEnd[SEGMENT_TOTAL-1]);
     
-    for(int i=_segmentStart[0]; i<_segmentEnd[0]; i++) {
+    for(int i=ledSegment[0].first; i<ledSegment[0].last; i++) {
       leds[i] = CRGB(255, 255, 255);
     }
-    for(int i=_segmentStart[2]; i<_segmentEnd[2]; i++) {
+    for(int i=ledSegment[2].first; i<ledSegment[2].last; i++) {
       leds[i] = CRGB(0, 0, 0);
     }
     
-    fill_gradient_RGB(leds, _segmentStart[1], CRGB(255, 255, 255), _segmentEnd[1], CRGB(0, 0, 0));
-    fill_gradient_RGB(leds, _segmentStart[3], CRGB(0, 0, 0), _segmentEnd[3], CRGB(255, 255, 255) );
+    fill_gradient_RGB(leds, ledSegment[1].first, CRGB(255, 255, 255), ledSegment[1].last, CRGB(0, 0, 0));
+    fill_gradient_RGB(leds, ledSegment[3].first, CRGB(0, 0, 0), ledSegment[3].last, CRGB(255, 255, 255) );
 
     //when sunrise is finished either stay bright, or change(fade) to previous levels
     //set tomorrows sunrise time

@@ -1,4 +1,4 @@
-/*----------------------------leds----------------------------*/
+/*----------------------------display----------------------------*/
 
 void setupLEDs() {
   
@@ -14,6 +14,7 @@ void setupLEDs() {
   FastLED.setTemperature(UncorrectedTemperature); //set first temperature
 
 }
+
 
 
 

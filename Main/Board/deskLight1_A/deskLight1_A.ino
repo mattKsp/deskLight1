@@ -31,18 +31,48 @@
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.21";
+const String _progVers = "0.22";
 /* 
  use if defined statements and comment out to disable debug mode 
  this will remove all debug code when compiling rather than just switching off
  for now only use serial when in debug 
 */
-#define DEBUG 1                           //
+#define DEBUG 1                           //comment/un-comment
 #ifdef DEBUG
 String inputString = "";                  // a string to hold incoming data
 boolean stringComplete = false;           // whether the string is complete
 #endif
 const int _mainLoopDelay = 0;             //just in case
+boolean _firstTimeSetupDone = false;      //starts false
+boolean _onOff = true;                    //TEMP true - this should init false, then get activated by touching something
+
+/*----------------------------modes----------------------------*/
+//#define MODE_NUM 9                        //total modes available
+const int MODE_NUM = 9;
+int _modeCur = 0;                         //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
+typedef struct {
+  String mName;     //added 'm' prefix to orig as 'name' has a.. wait for it.. a 'name' clash with.. 'name' ..bang, crash!
+  boolean isStatic; //moving(false) or static(true) //everything is vibration
+} MODE_INFO;
+MODE_INFO modeInfo[MODE_NUM] = {
+  { "glow", true },
+  { "sunrise", false},
+  { "morning", false},
+  { "day", false},
+  { "working", true},
+  { "evening", false},
+  { "sunset", false},
+  { "night", false},
+  { "changing", false}
+};
+//modeInfo[0] = { "glow", true }; //alt
+//#define MODE_PRESET_SLOT_NUM 3                        //total mode preset selection slots available
+const int MODE_PRESET_SLOT_NUM = 3;
+int _modePreset[MODE_PRESET_SLOT_NUM] = { 0, 4, 6 };  //test basic, tap bt to cycle around 3 mode slots   //expand to array or struct later for more presets
+int _modePresetSlotCur = 0;                           //the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
+//#define MODE_PRESET_NUM 3                           //total mode preset selections available - not in use yet
+//int _modePresetCur = 0;                             //..the current preset selection - not in use yet
+//eg. _modeCur = _modePreset[_modePresetSlotCur];
 
 /*-----------------RTC (DS3231 and AT24C32) on I2C------------------*/
 DS3231_Simple RTC;                        //init realtime clock
@@ -71,6 +101,9 @@ Bounce _button0 = Bounce();               //Instantiate a Bounce object
 #define LED_PIN 13                        //built-in LED
 #define LED_DOUT_PIN 6                    //DOut -> LED strip DIn
 #define LED_NUM 150                       //5m strip with 150 LEDs
+//const int LED_NUM = 150;
+//ext .h file.. erm.. array bound is not an integer constant before ']' token, so..
+//const int LED_NUM = 150;
 
 CRGB leds[LED_NUM];                       //global RGB array
 //CRGBArray<LED_NUM> leds;                 //array RGBSet ..neater   ..erm, if it worksS
@@ -80,21 +113,38 @@ CRGB leds[LED_NUM];                       //global RGB array
  * 47-59
  * 60-94
  */
-const int _segmentTotal = 4;
-//#define SEGMENT_TOTAL 4
+//const int _segmentTotal = 4;
+//#define SEGMENT_TOTAL 4                   //more later..
+const int SEGMENT_TOTAL = 4;
 //struct ???
-int _segmentStart[_segmentTotal] = { 0, 12, 47, 60 };
-int _segmentLength[_segmentTotal] = { 12, 35, 12, 34 };
-int _segmentEnd[_segmentTotal] = { 12, 47, 60, 95 };
+//int _segmentStart[SEGMENT_TOTAL] = { 0, 12, 47, 60 };
+//int _segmentLength[SEGMENT_TOTAL] = { 12, 35, 12, 34 };
+//int _segmentEnd[SEGMENT_TOTAL] = { 12, 47, 60, 95 };
 
-int _ledState = LOW;                      //use to toggle LOW/HIGH (ledState = !ledState)
-#define LED_GLOBAL_BRIGHTNESS 255                    //global brightness
+typedef struct {
+  byte first;
+  byte last;
+  byte total;
+} LED_SEGMENT;
+
+LED_SEGMENT ledSegment[SEGMENT_TOTAL] = { 
+  { 0, 11, 12 }, 
+  { 12, 46, 35 }, 
+  { 47, 59, 12 },
+  { 60, 94, 34 }
+};
+//ledSegment[0] = { 0, 0, 0 };
+//ledSegment[0].first
+
+int _ledState = LOW;                                //use to toggle LOW/HIGH (ledState = !ledState)
+#define LED_GLOBAL_BRIGHTNESS 255                   //global brightness
 
 #define TEMPERATURE_0 WarmFluorescent
 #define TEMPERATURE_1 StandardFluorescent
 #define TEMPERATURE_2 CoolWhiteFluorescent
+int _colorTempCur = 5;                               //current colour temperature
 
-CHSV startColor( 144, 70, 64 );
+CHSV startColor( 144, 70, 64 );       //these stay here cos using CHSV from FastLED library
 CHSV endColor( 31, 71, 69 );
 
 CRGB startColor_RGB( 3, 144, 232 );
@@ -102,7 +152,6 @@ CRGB endColor_RGB( 249, 180, 1 );
 
 
 /*----------------------------MAIN----------------------------*/
-boolean _firstTimeSetupDone = false;      //starts false
 void setup() {
   
   #ifdef DEBUG
@@ -122,11 +171,9 @@ void setup() {
   //RTC.disableAlarms();
   
   setupInterrupts();
-  
   delay(3000);                            //give the power, LED strip, etc. a couple of secs to stabilise
   setupLEDs();
-  setupButtons();
-  //setupTouchSensors();
+  setupUserInputs();
 
 
 //  DateTime MyTimestamp;
@@ -149,49 +196,34 @@ void setup() {
     setSunSet(1, 13, 16); //@18:45
   #endif
 
-  DS3231kickInterrupt();  //TEMP
+  DS3231kickInterrupt();  //TEMP util
 }
 
 void loop() {
-//MOVED - err.. now shouldn't this be used in the main loop section? come on then, move along, move along now.. nothing to see here
+  
   if(_firstTimeSetupDone == false) {
-    ifdef DEBUG
+    #ifdef DEBUG
       //RTC.promptForTimeAndDate(Serial);
-      _firstTimeSetupDone = true;
-    endif
+      _firstTimeSetupDone = true;         //need this for stuff like setting sunrise, cos it needs the time to have been set
+    #endif
   }
 
-//  if (stringComplete) {
-//    Serial.println(inputString);
-//    // clear the string:
-//    inputString = "";
-//    stringComplete = false;
-//  }
-
-  button0();
-  //touchSensors();
-
-  //..this is messy
-  if(_mode == 0) {
-    mode0();
-  } 
-  else if(_mode == 1) {
-    if(_button0Toggled == true) {
-      mode1();
-    } 
-    else if(_button0Toggled == false) {
-      fadeToBlackBy( leds, LED_NUM, 30); //fade everything to black
+  #ifdef DEBUG
+    if (stringComplete) {
+      Serial.println(inputString);
+      // clear the string:
+      inputString = "";
+      stringComplete = false;
     }
-  } 
-  else if(_mode == 2) {
-    mode2();
-  }
+  #endif
 
+  loopUserInputs();
+  loopModes();
   //clock extras
-  showTime();
-  sunRiseSetCheck();  //call here so only calling once per frame
-  sunRise();
-  sunSet();
+  //showTime();
+  //sunRiseSetCheck();  //call here so only calling once per frame
+  //sunRise();
+  //sunSet();
 
   FastLED.show();             //send all the data to the strips
   FastLED.delay(8);
@@ -199,6 +231,8 @@ void loop() {
   delay(_mainLoopDelay);
 }
 
+
+/*----------------------------Serial----------------------------*/
 /*
   SerialEvent occurs whenever a new data comes in the
  hardware serial RX.  This routine is run between each

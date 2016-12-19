@@ -5,7 +5,7 @@ Repository is an Arduino project
 
 ### Equipment
 #### Hardware
-- Arduino Mini Pro board, 5V 16MHz, 1K EEPROM
+- Arduino Mini Pro board
   * 5v
   * ATmega328
   * 16 MHz clock speed
