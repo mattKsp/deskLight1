@@ -7,8 +7,8 @@
  */
 void DS3231kickInterrupt() {
   Wire.beginTransmission(DS3231_I2C_ADDRESS);
-  Wire.write(0x0E);               //control location
-  Wire.write(B00000111);          //this!
+  Wire.write(0x0E);                         //control location
+  Wire.write(B00000111);                    //..this!
   Wire.endTransmission();
 }
 
@@ -19,7 +19,7 @@ void DS3231kickInterrupt() {
  This places different coloured lights at the ends of the LED strip(s) segments for quick visual feedback of calculations
  */
 void checkSegmentEndpoints() {
-  fill_solid( leds, LED_NUM, CRGB(0,0,0));
+  fill_solid( leds, _ledNum, CRGB(0,0,0));
   
   leds[ledSegment[0].first] = CRGB(255, 0, 0);
   leds[ledSegment[0].last] = CRGB(255, 0, 0);
@@ -41,8 +41,8 @@ void checkSegmentEndpoints() {
  This sets the first LED to show the current colour temperature
  */
 void showColorTempPx() {
-  leds[0] = _colorTempCur; //show indicator pixel    //colorTempCur from "deskLight1aSettings.h"
-  //leds[0] = TEMPERATURE_1; //show indicator pixel
+  leds[0] = _colorTempCur;                  //show indicator pixel
+  //leds[0] = TEMPERATURE_1;                  //show indicator pixel
 }
 
 /*
@@ -53,14 +53,115 @@ void showColorTempPx() {
  https://code.google.com/archive/p/tinkerit/wikis/SecretVoltmeter.wiki
  */
 long getVoltage() { 
-  long result;                                            // Read 1.1V reference against AVcc
+  long result;                              // Read 1.1V reference against AVcc
   ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1); 
-  delay(2);                                               // Wait for Vref to settle 
-  ADCSRA |= _BV(ADSC);                                    // Convert 
+  delay(2);                                 // Wait for Vref to settle 
+  ADCSRA |= _BV(ADSC);                      // Convert 
   while (bit_is_set(ADCSRA,ADSC)); 
   result = ADCL; 
   result |= ADCH<<8; 
-  result = 1126400L / result;                              // Back-calculate AVcc in mV
+  result = 1126400L / result;               // Back-calculate AVcc in mV
   return result;
 }
+
+/*
+ * Serial promt to set alarm 1
+ */
+#ifdef SET_ALARM1_BY_SERIAL
+void promptForAlarm1(Stream &Serial)
+{
+  char buffer[3] = { 0 };
+    
+  Serial.println("Alarm 1 is set when all data is entered and you send 'Y' to confirm.");
+  do
+  {
+    memset(buffer, 0, sizeof(buffer));
+    Serial.println();
+    Serial.print("Enter Hour (2 digits, 24 hour clock, 00-23): ");
+    while(!Serial.available()) ; // Wait until bytes
+    Serial.readBytes(buffer, 2);
+    while(Serial.available()) Serial.read(); 
+    int hr = atoi(buffer[0] == '0' ? buffer+1 : buffer);
+    
+    memset(buffer, 0, sizeof(buffer));
+    Serial.println();
+    Serial.print("Enter Minute (2 digits, 00-59): ");
+    while(!Serial.available()) ; // Wait until bytes
+    Serial.readBytes(buffer, 2);
+    while(Serial.available()) Serial.read(); 
+    int mins = atoi(buffer[0] == '0' ? buffer+1 : buffer);
+
+    Serial.println();
+    Serial.print("Entered Alarm 1 - "); 
+    //printTo(Serial, Settings);
+    Serial.print(hr);
+    Serial.print(":"); 
+    Serial.print(mins); 
+     
+    Serial.println();
+    Serial.print("Send 'Y' to set the Alarm 1, send 'N' to start again: ");
+        
+    while(!Serial.available()) ; // Wait until bytes
+    Serial.readBytes(buffer, 1);
+    while(Serial.available()) Serial.read(); 
+    if(buffer[0] == 'Y' || buffer[0] == 'y')
+    {
+      setSunRise(1, hr, mins);    //mode 1 = set time this way
+      Serial.println();
+      Serial.print("Alarm 1 set"); 
+      break;
+    }
+  } while(1);   
+}
+#endif
+
+/*
+ * Serial promt to set alarm 2
+ */
+#ifdef SET_ALARM2_BY_SERIAL
+void promptForAlarm2(Stream &Serial)
+{
+  char buffer[3] = { 0 };
+    
+  Serial.println("Alarm 2 is set when all data is entered and you send 'Y' to confirm.");
+  do
+  {
+    memset(buffer, 0, sizeof(buffer));
+    Serial.println();
+    Serial.print("Enter Hour (2 digits, 24 hour clock, 00-23): ");
+    while(!Serial.available()) ; // Wait until bytes
+    Serial.readBytes(buffer, 2);
+    while(Serial.available()) Serial.read(); 
+    int hr = atoi(buffer[0] == '0' ? buffer+1 : buffer);
+    
+    memset(buffer, 0, sizeof(buffer));
+    Serial.println();
+    Serial.print("Enter Minute (2 digits, 00-59): ");
+    while(!Serial.available()) ; // Wait until bytes
+    Serial.readBytes(buffer, 2);
+    while(Serial.available()) Serial.read(); 
+    int mins = atoi(buffer[0] == '0' ? buffer+1 : buffer);
+
+    Serial.println();
+    Serial.print("Entered Alarm 2 - "); 
+    Serial.print(hr);
+    Serial.print(":"); 
+    Serial.print(mins); 
+     
+    Serial.println();
+    Serial.print("Send 'Y' to set the Alarm 2, send 'N' to start again: ");
+        
+    while(!Serial.available()) ; // Wait until bytes
+    Serial.readBytes(buffer, 1);
+    while(Serial.available()) Serial.read(); 
+    if(buffer[0] == 'Y' || buffer[0] == 'y')
+    {
+      setSunSet(0, hr, mins);    //mode 1 = set time this way
+      Serial.println();
+      Serial.print("Alarm 2 set"); 
+      break;
+    }
+  } while(1);   
+}
+#endif
 

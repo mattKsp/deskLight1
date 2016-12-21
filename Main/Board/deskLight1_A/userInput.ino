@@ -3,9 +3,10 @@
 void setupUserInputs() {
   
   //button0
-    pinMode(BUTTON_0_PIN, INPUT_PULLUP);          //Setup the button with an internal pull-up :
-    _button0.attach(BUTTON_0_PIN);                //After setting up the button, setup the Bounce instance :
-    _button0.interval(_buttonDebounceTime);
+  pinMode(_button0Pin, INPUT_PULLUP);       //Setup the button with an internal pull-up :
+  _button0.attach(_button0Pin);             //After setting up the button, setup the Bounce instance :
+  _button0.interval(_buttonDebounceTime);
+  
   //setupTouchSensors();
   
 }
@@ -21,17 +22,19 @@ void loopUserInputs() {
 
 /*----------------------------buttons----------------------------*/
 void button0() {
-  boolean hasChanged0 = _button0.update();      //Bounce buttons keep internal track of whether any change has occured since last time
+  boolean hasChanged0 = _button0.update();  //Bounce buttons keep internal track of whether any change has occured since last time
   
-  if (hasChanged0) {
-    //_button[0].update();                        //Update the LED button Bounce instance again  ???
+  if(hasChanged0) {
+    //_button[0].update();                  //Update the LED button Bounce instance again  ???
     
+    if(_onOff == false) { _onOff = true; }  //if the lights are already off, then turn them on
+
     if(_button0.fell()) {
       //_modeCur +=1;
-      //if(_modeCur >= MODE_NUM){ _modeCur = 0; }  //TEMP rollover
+      //if(_modeCur >= _modeNum){ _modeCur = 0; }  //TEMP rollover
 
       _modePresetSlotCur +=1;
-      if(_modePresetSlotCur >= MODE_PRESET_SLOT_NUM){ _modePresetSlotCur = 0; }  //TEMP rollover
+      if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover
       _modeCur = _modePreset[_modePresetSlotCur];
       //write cur mode to memory ???
       DEBUG_PRINT("user input - button 0 fell")
@@ -46,13 +49,6 @@ void button0() {
 } //END button0
 
 /*----------------------------touch sensors----------------------------*/
-//int _touchSensorsTotal = 3;
-boolean _touchSensorToggled[3];
-
-void setupTouchSensors() {
-  //
-}
-
 void touchSensors() {
 
   //for(int i = 0; i < _touchSensorsTotal; i++) {

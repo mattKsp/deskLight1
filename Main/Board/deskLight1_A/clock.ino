@@ -94,7 +94,7 @@
 /*------------------LED overlays-----------------*/
 //these will probably be overlaid onto whatever is showing at the time
 
-const int _showTimeUpdateInterval = 1000; //1 sec = 1000 milliseconds
+const int _showTimeUpdateInterval = 1000;   //1 sec = 1000 milliseconds
 unsigned long _previousMillis = 0;
 
 void showTime() {
@@ -106,22 +106,22 @@ void showTime() {
   //use bytes..
   //int _hour = 3;
   //int _minute = 25;
-  //int i = map(decToInt(hr), 0, 12, _segmentEnd[SEGMENT_TOTAL-1], _segmentStart[0] );
-  //int j = map(decToInt(mins), 0, 60, _segmentStart[0], _segmentEnd[SEGMENT_TOTAL-1]);
-  unsigned long currentMillis = millis(); //save state
+  //int i = map(decToInt(hr), 0, 12, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
+  //int j = map(decToInt(mins), 0, 60, _segmentStart[0], _segmentEnd[_segmentTotal-1]);
+  unsigned long currentMillis = millis();   //save state
   if((unsigned long)(currentMillis - _previousMillis) >=  _showTimeUpdateInterval) {
     DateTime MyDateAndTime;
     MyDateAndTime = RTC.read();
     
-    int i = map(MyDateAndTime.Hour, 0, 12, ledSegment[SEGMENT_TOTAL-1].last, ledSegment[0].first );
-    int j = map(MyDateAndTime.Minute, 0, 60, ledSegment[SEGMENT_TOTAL-1].last, ledSegment[0].first );
-    int k = map(MyDateAndTime.Second, 0, 60, ledSegment[SEGMENT_TOTAL-1].last, ledSegment[0].first );
-    leds[i] = -leds[i]; //invert
-    leds[j] = -leds[j]; //invert
-    leds[k] = -leds[k]; //invert
-    leds[i] += CRGB( 20, 0, 0); //add a little red
-    leds[j] += CRGB( 0, 20, 0); //add a little green
-    leds[k] += CRGB( 0, 0, 20); //add a little blue
+    int i = map(MyDateAndTime.Hour, 0, 12, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
+    int j = map(MyDateAndTime.Minute, 0, 60, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
+    int k = map(MyDateAndTime.Second, 0, 60, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
+    leds[i] = -leds[i];                     //invert
+    leds[j] = -leds[j];                     //invert
+    leds[k] = -leds[k];                     //invert
+    leds[i] += CRGB( 20, 0, 0);             //add a little red
+    leds[j] += CRGB( 0, 20, 0);             //add a little green
+    leds[k] += CRGB( 0, 0, 20);             //add a little blue
 
     #ifdef DEBUG
       Serial.print(MyDateAndTime.Hour);
@@ -140,139 +140,8 @@ void showTime() {
       Serial.println(" ");
     #endif
     
-    _previousMillis = currentMillis;  //save state for next time around
+    _previousMillis = currentMillis;        //save state for next time around
   }
 }
 
-void setSunRise(int mode, uint8_t hour, uint8_t mins) {
-  //mode 0 = natural (set rise to realtime)
-  //mode 1 = set time aswell (mabye link to alarm array entry)
-  //uses alarm 2
-  //RTC.disableAlarms();  //hmm.. power cuts? ..and how to specify 1 or both?
-  DateTime MyTimestamp;
-  MyTimestamp = RTC.read();  //get an initialized timestamp to use
-  if(mode == 0) {
-    //read table from somewhere? is AT24C32 storage big enough?
-    //sun 18 dec 16 nautical twilight 06:49
-    MyTimestamp.Hour = 6;
-    MyTimestamp.Minute = 49;
-  } else if(mode == 1) {
-    MyTimestamp.Hour = hour;
-    MyTimestamp.Minute = mins;
-  }
-  RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_DAILY);
-}
-
-void setSunSet(int mode, uint8_t hour, uint8_t mins) {
-  //mode 0 = natural (set fall to realtime)
-  //mode 1 = set time (mabye link to alarm array entry)
-  //uses alarm 1 - might have to be set after sunrise trigger everyday
-  //RTC.disableAlarms();  //hmm.. power cuts? ..and how to specify 1 or both?
-  DateTime MyTimestamp = RTC.read();  //get an initialized timestamp to use
-  if(mode == 0) {
-    //read table from somewhere? is AT24C32 storage big enough?
-    //sat 17 dec 16 nautical twilight 17:12
-    MyTimestamp.Hour = 17;
-    MyTimestamp.Minute = 12;
-    MyTimestamp.Second = 0;
-  } else if(mode == 1) {
-    MyTimestamp.Hour = hour;
-    MyTimestamp.Minute = mins;
-    MyTimestamp.Second = 0;
-  }
-  RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND_MINUTE_HOUR);
-}
-
-void sunRiseSetCheck() {
-  //mabye restrict time check interval ?
-  if(_sunRiseSetTriggered) {
-    DateTime curDT;
-    curDT = RTC.read();
-    if(curDT.Hour > 12) {
-      _sunSetEnabled = true;
-    } else {
-      _sunRiseEnabled = true;
-    }
-    _sunRiseSetTriggered = false;
-    
-//    #ifdef DEBUG
-//      Serial.println("sunRiseSetInterrupt triggered");
-//    #endif
-    DEBUG_PRINT("sunRiseSetCheck - sunRiseSetInterrupt triggered")
-  }
-}
-
-void sunRise() {
-//  if(_sunRiseSetTriggered) {
-//    DateTime MyDateAndTime;
-//    MyDateAndTime = RTC.read();
-//    if(MyDateAndTime.Hour < 12) {
-//      _sunRiseEnabled = true;
-//      _sunRiseSetTriggered = false;
-//    }
-//  }
-//  if(MyDateAndTime.Hour < 9) {  //TEMP 9, should be 12
-//    //is time is before 12:00
-//    //start sunrise sequence
-//    _sunRiseTriggered = true;
-//  } else {
-//    //else if time is 12:00 or after
-//    //start sunset sequence
-//    _sunSetTriggered = true;
-//  }
-//  if(_sunRiseTriggered) {
-//    _sunRiseEnabled = true;
-//    _sunRiseTriggered = false;  //reset for next interrupt
-//  }
-  if(_sunRiseEnabled) {
-    //if lights are currently on..
-    //save state,
-    //then fade everything to black
-    //..now do sun rise
-    
-    int startPx0 = (0 - SEGMENT_TOTAL);
-    int endPx0 = 0;
-    //map(int hour, 0, 12, _segmentStart[0], _segmentEnd[SEGMENT_TOTAL-1]);
-    
-    for(int i=ledSegment[0].first; i<ledSegment[0].last; i++) {
-      leds[i] = CRGB(255, 255, 255);
-    }
-    for(int i=ledSegment[2].first; i<ledSegment[2].last; i++) {
-      leds[i] = CRGB(0, 0, 0);
-    }
-    
-    fill_gradient_RGB(leds, ledSegment[1].first, CRGB(255, 255, 255), ledSegment[1].last, CRGB(0, 0, 0));
-    fill_gradient_RGB(leds, ledSegment[3].first, CRGB(0, 0, 0), ledSegment[3].last, CRGB(255, 255, 255) );
-
-    //when sunrise is finished either stay bright, or change(fade) to previous levels
-    //set tomorrows sunrise time
-    //_sunRiseEnabled = false;  //reset
-  }
-}
-
-void sunSet() {
-  if(_sunSetEnabled) {
-    
-    //if lights are currently off..
-    //save state,
-    //then fade eveything to start levels
-    //..now do sunset
-    //
-    //when sunset is finished either stay bright, or change(fade) to previous levels
-    //set tomorrows sunset time
-    //_sunSetEnabled = false; //switch everything off and lock the doors behind you, ..until next time
-
-    #ifdef DEBUG
-      DateTime MyDateAndTime;
-      MyDateAndTime = RTC.read();
-      Serial.print("sunset enabled");
-      Serial.print(" @ ");
-      Serial.print(MyDateAndTime.Hour);
-      Serial.print(":");
-      Serial.print(MyDateAndTime.Minute);
-      Serial.println();
-    #endif
-    
-  }
-}
 
