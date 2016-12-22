@@ -57,11 +57,11 @@ void mode0() {
     for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
       leds[i] = startColor_RGB;
     }
-    fill_gradient_RGB(leds, ledSegment[1].first, startColor_RGB, ledSegment[0].last, black);
-    for(int i = ledSegment[2].first; i < ledSegment[2].last; i++) {
+    fill_gradient_RGB(leds, ledSegment[1].first, startColor_RGB, ledSegment[1].last, black);
+    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
       leds[i] = black;
     }
-    fill_gradient_RGB(leds, ledSegment[3].first, black, ledSegment[1].last, startColor_RGB );
+    fill_gradient_RGB(leds, ledSegment[3].first, black, ledSegment[3].last, startColor_RGB );
   }
   else {
     //
@@ -96,7 +96,7 @@ void mode4() {
   //name should be working!
   //isStatic should be true
   if(modeInfo[4].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(255, 255, 255));
+    fill_solid( leds, _ledNum, CRGB(0, 255, 0));  //TEMP colour
 /*
  //sub temperature modes later..
   if(_mode0_sub == 0) {
@@ -139,7 +139,7 @@ void mode4() {
   */
   }
   else {
-    //
+    fill_solid( leds, _ledNum, CRGB(0, 255, 0));  //TEMP colour
   }
   
 }

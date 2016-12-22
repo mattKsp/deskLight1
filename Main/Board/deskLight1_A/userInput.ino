@@ -26,23 +26,26 @@ void button0() {
   
   if(hasChanged0) {
     //_button[0].update();                  //Update the LED button Bounce instance again  ???
+      //do button stuff
+      if(_button0.fell()) {
+        if(_onOff == false) {
+          _onOff = true;  //if the lights are already off, then turn them on
+          //don't need to change mode, as we are already in a mode, just switched on
+        } else {
+          //_modeCur +=1;
+          //if(_modeCur >= _modeNum){ _modeCur = 0; }  //TEMP rollover catch
     
-    if(_onOff == false) { _onOff = true; }  //if the lights are already off, then turn them on
-
-    if(_button0.fell()) {
-      //_modeCur +=1;
-      //if(_modeCur >= _modeNum){ _modeCur = 0; }  //TEMP rollover
-
-      _modePresetSlotCur +=1;
-      if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover
-      _modeCur = _modePreset[_modePresetSlotCur];
-      //write cur mode to memory ???
-      DEBUG_PRINT("user input - button 0 fell")
-    }
-    if(_button0.rose()) {
-      //write cur mode to memory ???
-      DEBUG_PRINT("user input - button 0 rose")
-    }
+          _modePresetSlotCur +=1;
+          if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
+          _modeCur = _modePreset[_modePresetSlotCur];
+          //write cur mode to memory ???
+          DEBUG_PRINT("user input - button 0 fell")
+        } //END onOff
+      } //END fell
+      if(_button0.rose()) {
+        //write cur mode to memory ???
+        DEBUG_PRINT("user input - button 0 rose")
+      } //END rose
     
   } //END hasChanged0
   

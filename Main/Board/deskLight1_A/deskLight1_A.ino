@@ -35,16 +35,16 @@
  this will remove all debug code when compiling rather than just switching off
  for now only use serial when in debug 
 */
-#define DEBUG 1                             //comment/un-comment
-//#define SET_TIME_BY_SERIAL 1              //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
-#define SET_ALARM1_BY_SERIAL 1            //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 1
-//#define SET_ALARM2_BY_SERIAL 1            //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 2
+//#define DEBUG 1                             //comment/un-comment
+//#define SET_TIME_BY_SERIAL 1                //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
+//#define SET_SUNRISE_ALARM_BY_SERIAL 1 //uses Alarm2 //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 1
+//#define SET_SUNSET_ALARM_BY_SERIAL 1 //uses Alarm1//(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 2
 
 const String _progName = "deskLight1_A";
 const String _progVers = "0.23";
 const int _mainLoopDelay = 0;               //just in case
 boolean _firstTimeSetupDone = false;        //starts false
-boolean _onOff = false;                     //this should init false, then get activated by input
+volatile boolean _onOff = false;                     //this should init false, then get activated by input - on/off true/false
 #ifdef DEBUG
 String _inputString = "";                   // a string to hold incoming data
 boolean stringComplete = false;             // whether the string is complete
@@ -57,8 +57,8 @@ typedef struct {
 } MODE_INFO;
 const int _modeNum = 9;
 const int _modePresetSlotNum = 3;
-int _modePreset[_modePresetSlotNum] = { 0, 4, 6 }; //test basic, tap bt to cycle around 3 mode slots   //expand to array or struct later for more presets
-MODE_INFO modeInfo[_modeNum] = {
+int _modePreset[_modePresetSlotNum] = { 1, 4, 5 }; //test basic, tap bt to cycle around 3 mode slots   //expand to array or struct later for more presets
+volatile MODE_INFO modeInfo[_modeNum] = {
   { "glow", true },
   { "sunrise", false},
   { "morning", false},
@@ -69,7 +69,7 @@ MODE_INFO modeInfo[_modeNum] = {
   { "night", false},
   { "changing", false}
 };
-int _modeCur = 0;                           //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
+volatile int _modeCur = 1;                           //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
 int _modePresetSlotCur = 0;                 //the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 
 /*-----------------RTC (DS3231 and AT24C32) on I2C------------------*/
@@ -102,16 +102,23 @@ typedef struct {
 } LED_SEGMENT;
 const int _ledPin = 13;                     //built-in LED
 const int _ledDOutPin = 6;                  //DOut -> LED strip DIn
-const int _ledNum = 150;                    //5m strip with 150 LEDs
+//const int _ledNum = 150;                    //5m strip with 150 LEDs
+const int _ledNum = 40;     //TEMP testing - 55 on roll, using 40
 const int _segmentTotal = 4;                //more later..
 const int _ledGlobalBrightness = 255;          //global brightness
 #define UPDATES_PER_SECOND 100              //main loop FastLED show delay
+//LED_SEGMENT ledSegment[_segmentTotal] = { 
+//  { 0, 11, 12 }, 
+//  { 12, 46, 35 }, 
+//  { 47, 59, 12 },
+//  { 60, 94, 34 }
+//};
 LED_SEGMENT ledSegment[_segmentTotal] = { 
-  { 0, 11, 12 }, 
-  { 12, 46, 35 }, 
-  { 47, 59, 12 },
-  { 60, 94, 34 }
-};
+  { 0, 9, 10 }, 
+  { 10, 19, 10 }, 
+  { 20, 29, 10 },
+  { 30, 39, 10 }
+};                                
 CHSV startColor( 144, 70, 64 );
 CHSV endColor( 31, 71, 69 );
 CRGB startColor_RGB( 3, 144, 232 );
@@ -152,13 +159,15 @@ void setup() {
     #ifdef SET_TIME_BY_SERIAL
       RTC.promptForTimeAndDate(Serial);
     #endif
-    #ifdef SET_ALARM1_BY_SERIAL
+    Serial.println("The currently (set) date and time is...");
+    RTC.printTo(Serial);
+    #ifdef SET_SUNRISE_ALARM_BY_SERIAL
       RTC.disableAlarms();
-      promptForAlarm1(Serial);
+      promptForSunRiseAlarm(Serial);
     #endif
-    #ifdef SET_ALARM2_BY_SERIAL
+    #ifdef SET_SUNSET_ALARM_BY_SERIAL
       RTC.disableAlarms();
-      promptForAlarm1(Serial);
+      promptForSunSetAlarm(Serial);
     #endif
     //RTC.disableAlarms();
     //setSunRise(1, 7, 30); //@07:30
@@ -166,6 +175,11 @@ void setup() {
   #endif
 
   DS3231kickInterrupt();  //TEMP util
+  
+  #ifdef DEBUG
+  //everything done? ok then..
+    blinkStatusLED();
+  #endif
 }
 
 void loop() {

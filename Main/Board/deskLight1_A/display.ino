@@ -21,4 +21,18 @@ void addGlitter( fract8 chanceOfGlitter) {
   }
 }
 
-
+/*-----------display - status------------*/
+void blinkStatusLED() {
+  //this delays the whole script. use sparingly
+  digitalWrite(_ledPin, HIGH);
+  delay(250);
+  digitalWrite(_ledPin, LOW);
+  delay(250);
+  digitalWrite(_ledPin, HIGH);
+  delay(250);
+  digitalWrite(_ledPin, LOW);
+  delay(250);
+  digitalWrite(_ledPin, HIGH);
+  delay(250);
+  digitalWrite(_ledPin, LOW);
+}

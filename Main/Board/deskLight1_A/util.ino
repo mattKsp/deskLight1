@@ -65,14 +65,14 @@ long getVoltage() {
 }
 
 /*
- * Serial promt to set alarm 1
+ * Serial promt to set alarm 2 - sunrise
  */
-#ifdef SET_ALARM1_BY_SERIAL
-void promptForAlarm1(Stream &Serial)
+#ifdef SET_SUNRISE_ALARM_BY_SERIAL
+void promptForSunRiseAlarm(Stream &Serial)
 {
   char buffer[3] = { 0 };
     
-  Serial.println("Alarm 1 is set when all data is entered and you send 'Y' to confirm.");
+  Serial.println("SunRise (Alarm2) is set when all data is entered and you send 'Y' to confirm.");
   do
   {
     memset(buffer, 0, sizeof(buffer));
@@ -92,14 +92,14 @@ void promptForAlarm1(Stream &Serial)
     int mins = atoi(buffer[0] == '0' ? buffer+1 : buffer);
 
     Serial.println();
-    Serial.print("Entered Alarm 1 - "); 
+    Serial.print("Entered SunRise (Alarm2) @ "); 
     //printTo(Serial, Settings);
     Serial.print(hr);
     Serial.print(":"); 
     Serial.print(mins); 
      
     Serial.println();
-    Serial.print("Send 'Y' to set the Alarm 1, send 'N' to start again: ");
+    Serial.print("Send 'Y' to set SunRise (Alarm2), send 'N' to start again: ");
         
     while(!Serial.available()) ; // Wait until bytes
     Serial.readBytes(buffer, 1);
@@ -108,7 +108,7 @@ void promptForAlarm1(Stream &Serial)
     {
       setSunRise(1, hr, mins);    //mode 1 = set time this way
       Serial.println();
-      Serial.print("Alarm 1 set"); 
+      Serial.print("SunRise (Alarm2) set"); 
       break;
     }
   } while(1);   
@@ -116,14 +116,14 @@ void promptForAlarm1(Stream &Serial)
 #endif
 
 /*
- * Serial promt to set alarm 2
+ * Serial promt to set Alarm 1 - sunset
  */
-#ifdef SET_ALARM2_BY_SERIAL
-void promptForAlarm2(Stream &Serial)
+#ifdef SET_SUNSET_ALARM_BY_SERIAL
+void promptForSunSetAlarm(Stream &Serial)
 {
   char buffer[3] = { 0 };
     
-  Serial.println("Alarm 2 is set when all data is entered and you send 'Y' to confirm.");
+  Serial.println("SunSet (Alarm1) is set when all data is entered and you send 'Y' to confirm.");
   do
   {
     memset(buffer, 0, sizeof(buffer));
@@ -143,13 +143,13 @@ void promptForAlarm2(Stream &Serial)
     int mins = atoi(buffer[0] == '0' ? buffer+1 : buffer);
 
     Serial.println();
-    Serial.print("Entered Alarm 2 - "); 
+    Serial.print("Entered SunSet (Alarm1) - "); 
     Serial.print(hr);
     Serial.print(":"); 
     Serial.print(mins); 
      
     Serial.println();
-    Serial.print("Send 'Y' to set the Alarm 2, send 'N' to start again: ");
+    Serial.print("Send 'Y' to set Sunset (Alarm1), send 'N' to start again: ");
         
     while(!Serial.available()) ; // Wait until bytes
     Serial.readBytes(buffer, 1);
@@ -158,7 +158,7 @@ void promptForAlarm2(Stream &Serial)
     {
       setSunSet(0, hr, mins);    //mode 1 = set time this way
       Serial.println();
-      Serial.print("Alarm 2 set"); 
+      Serial.print("SunSet (Alarm1) set"); 
       break;
     }
   } while(1);   
