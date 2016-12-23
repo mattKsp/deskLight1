@@ -33,5 +33,5 @@ Repository is an Arduino project
 This software is provided on an "AS-IS-BASIS"
 
 ### Reference
-https://github.com/FastLED/FastLED/wiki/Pixel-reference <br> http://playground.arduino.cc/Main/CapacitiveSensor <br> 
+https://github.com/FastLED/FastLED/wiki/Pixel-reference <br> http://playground.arduino.cc/Main/CapacitiveSensor <br> http://www.timeanddate.com/sun/uk/york <br>  
  
