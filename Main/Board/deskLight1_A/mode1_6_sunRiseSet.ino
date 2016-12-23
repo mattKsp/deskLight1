@@ -43,11 +43,12 @@ void setSunSet(int mode, uint8_t hour, uint8_t mins) {
 }
 
 void setSunRiseSet(boolean riseSet, int mode, uint8_t hour, uint8_t mins) {
+  //sun rise/set is.. rise(false)/set(true)
   //mode 0 = natural (set rise to realtime) - Not used yet!
   //mode 1 = set time aswell (mabye link to alarm array entry)
-  //RTC.disableAlarms();                      //hmm.. power cuts? ..and how to specify 1 or both? write my own?
+  //RTC.disableAlarms();                                                          //hmm.. power cuts? ..and how to specify 1 or both? write my own?
   DateTime MyTimestamp;
-  MyTimestamp = RTC.read();                 //get an initialized timestamp to use
+  MyTimestamp = RTC.read();                                                       //get an initialized timestamp to use
   if(mode == 0) {
     //read table from somewhere? is AT24C32 storage big enough?
     //sat 17 dec 16 nautical twilight 17:12
@@ -59,10 +60,22 @@ void setSunRiseSet(boolean riseSet, int mode, uint8_t hour, uint8_t mins) {
     MyTimestamp.Minute = mins;
     MyTimestamp.Second = 0;
   }
-  if(riseSet) {
-    RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND_MINUTE_HOUR);   //sunRise - alarm2
+  if(riseSet == false) {
+    RTC.setAlarm(DS3231_Simple::ALARM_EVERY_MINUTE); 
+    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_MINUTE);
+    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_DAILY);                          //sun rise - Alarm 2 - ALARM_DAILY (on the hour and minute)
+    #ifdef DEBUG
+      Serial.println();
+      Serial.print(F("void setSunRiseSet (rise/Alarm2) "));
+      Serial.print(hour);
+      Serial.print(":"); 
+      Serial.print(mins);
+      Serial.println();
+    #endif
   } else {
-    RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_DAILY);                      //sunSet - alarm1
+    RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_EVERY_SECOND); 
+    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND); 
+    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND_MINUTE_HOUR);       //sun set - Alarm 1 - ALARM_MATCH_SECOND_MINUTE_HOUR
   }
 }
 
@@ -87,7 +100,7 @@ void sunRise() {
   //time interval for each step (ms)
   //levels for each step
 
-  _sunRiseInterval = 5000;
+  _sunRiseInterval = 10000;
   
   unsigned long _sunRiseCurrentMillis;// = millis(); //empty ok?            //get current time //not really necessary, but didn't want to leave it empty in case..
 

@@ -21,8 +21,15 @@
 // Tested on Arduino Pro Mini (5v, ATmega328, 16mhz clock speed, 32KB Flash, 2KB SRAM, 1KB EEPROM)
 
 
+#define DEBUG 1                             //comment/un-comment
+//#ifdef DEBUG     
+//#define SET_TIME_BY_SERIAL 1                //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
+//#define SET_SUNRISE_ALARM_BY_SERIAL 1 //uses Alarm2 //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 1
+//#define SET_SUNSET_ALARM_BY_SERIAL 1 //uses Alarm1//(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 2
+//#endif
+
 /*----------------------------libraries----------------------------*/
-#include <DebugUtils.h>                   //DEBUG_PRINT(str) - tool that spits out message and appropriate stamps for where in the program, what time, etc.
+//#include <DebugUtils.h>   //have to restrict memory use //DEBUG_PRINT(str) - tool that spits out message and appropriate stamps for where in the program, what time, etc.
 #include <EEPROM.h>                       //a few saved settings
 #include <DS3231_Simple.h>                //DS3231 realtime clock (with AT24C32 memory backback)
 #include <Bounce2.h>                      //buttons with de-bounce
@@ -35,16 +42,11 @@
  this will remove all debug code when compiling rather than just switching off
  for now only use serial when in debug 
 */
-//#define DEBUG 1                             //comment/un-comment
-//#define SET_TIME_BY_SERIAL 1                //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
-//#define SET_SUNRISE_ALARM_BY_SERIAL 1 //uses Alarm2 //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 1
-//#define SET_SUNSET_ALARM_BY_SERIAL 1 //uses Alarm1//(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 2
-
 const String _progName = "deskLight1_A";
 const String _progVers = "0.23";
 const int _mainLoopDelay = 0;               //just in case
-boolean _firstTimeSetupDone = false;        //starts false
-volatile boolean _onOff = false;                     //this should init false, then get activated by input - on/off true/false
+boolean _firstTimeSetupDone = false;        //starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
+volatile boolean _onOff = false;            //this should init false, then get activated by input - on/off true/false
 #ifdef DEBUG
 String _inputString = "";                   // a string to hold incoming data
 boolean stringComplete = false;             // whether the string is complete
@@ -69,7 +71,7 @@ volatile MODE_INFO modeInfo[_modeNum] = {
   { "night", false},
   { "changing", false}
 };
-volatile int _modeCur = 1;                           //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
+volatile int _modeCur = 1;                  //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
 int _modePresetSlotCur = 0;                 //the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 
 /*-----------------RTC (DS3231 and AT24C32) on I2C------------------*/
@@ -102,23 +104,23 @@ typedef struct {
 } LED_SEGMENT;
 const int _ledPin = 13;                     //built-in LED
 const int _ledDOutPin = 6;                  //DOut -> LED strip DIn
-//const int _ledNum = 150;                    //5m strip with 150 LEDs
-const int _ledNum = 40;     //TEMP testing - 55 on roll, using 40
+const int _ledNum = 150;                    //5m strip with 150 LEDs
+//const int _ledNum = 40;     //TEMP testing - 55 on roll, using 40
 const int _segmentTotal = 4;                //more later..
 const int _ledGlobalBrightness = 255;          //global brightness
 #define UPDATES_PER_SECOND 100              //main loop FastLED show delay
-//LED_SEGMENT ledSegment[_segmentTotal] = { 
-//  { 0, 11, 12 }, 
-//  { 12, 46, 35 }, 
-//  { 47, 59, 12 },
-//  { 60, 94, 34 }
-//};
 LED_SEGMENT ledSegment[_segmentTotal] = { 
-  { 0, 9, 10 }, 
-  { 10, 19, 10 }, 
-  { 20, 29, 10 },
-  { 30, 39, 10 }
-};                                
+  { 0, 11, 12 }, 
+  { 12, 46, 35 }, 
+  { 47, 59, 12 },
+  { 60, 94, 34 }
+};
+//LED_SEGMENT ledSegment[_segmentTotal] = { 
+//  { 0, 9, 10 }, 
+//  { 10, 19, 10 }, 
+//  { 20, 29, 10 },
+//  { 30, 39, 10 }
+//};                                
 CHSV startColor( 144, 70, 64 );
 CHSV endColor( 31, 71, 69 );
 CRGB startColor_RGB( 3, 144, 232 );
@@ -146,11 +148,10 @@ void setup() {
     Serial.println();
   #endif
   
+  setupInterrupts();
   RTC.begin();                              //DS3231 RealTimeClock begin..
   //RTC.formatEEPROM();
   //RTC.disableAlarms();
-  
-  setupInterrupts();
   delay(3000);                              //give the power, LED strip, etc. a couple of secs to stabilise
   setupLEDs();
   setupUserInputs();
@@ -159,25 +160,27 @@ void setup() {
     #ifdef SET_TIME_BY_SERIAL
       RTC.promptForTimeAndDate(Serial);
     #endif
-    Serial.println("The currently (set) date and time is...");
+    Serial.println("Current date/time = ");
     RTC.printTo(Serial);
-    #ifdef SET_SUNRISE_ALARM_BY_SERIAL
-      RTC.disableAlarms();
-      promptForSunRiseAlarm(Serial);
-    #endif
-    #ifdef SET_SUNSET_ALARM_BY_SERIAL
-      RTC.disableAlarms();
-      promptForSunSetAlarm(Serial);
-    #endif
-    //RTC.disableAlarms();
-    //setSunRise(1, 7, 30); //@07:30
-    //setSunSet(1, 13, 16); //@18:45
+//    #ifdef SET_SUNRISE_ALARM_BY_SERIAL
+//      RTC.disableAlarms();
+//      promptForSunRiseAlarm(Serial);
+//    #endif
+//    #ifdef SET_SUNSET_ALARM_BY_SERIAL
+//      RTC.disableAlarms();
+//      promptForSunSetAlarm(Serial);
+//    #endif
+    RTC.disableAlarms();
+    setSunRise(1, 0, 30); //@07:30
+    setSunSet(1, 13, 16); //@18:45
   #endif
 
   DS3231kickInterrupt();  //TEMP util
   
   #ifdef DEBUG
   //everything done? ok then..
+    Serial.print(F("Setup done"));
+    Serial.println();
     blinkStatusLED();
   #endif
 }
@@ -196,6 +199,16 @@ void loop() {
       Serial.println(_inputString);
       _inputString = "";                    //clear the string:
       stringComplete = false;
+    }
+    // To check the alarms we just ask the clock
+    uint8_t AlarmsFired = RTC.checkAlarms();
+    // Then can check if either alarm is fired (there are 2 alarms possible in the chip)
+    // by using a "bitwise and"
+    if(AlarmsFired & 1) {
+      RTC.printTo(Serial); Serial.println(": First alarm has fired!");
+    }
+    if(AlarmsFired & 2) {
+      RTC.printTo(Serial); Serial.println(": Second alarm has fired!");
     }
   #endif
 

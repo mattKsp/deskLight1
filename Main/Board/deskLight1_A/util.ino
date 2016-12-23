@@ -64,20 +64,22 @@ long getVoltage() {
   return result;
 }
 
+
 /*
  * Serial promt to set alarm 2 - sunrise
  */
-#ifdef SET_SUNRISE_ALARM_BY_SERIAL
+/*#ifdef SET_SUNRISE_ALARM_BY_SERIAL
 void promptForSunRiseAlarm(Stream &Serial)
 {
   char buffer[3] = { 0 };
     
-  Serial.println("SunRise (Alarm2) is set when all data is entered and you send 'Y' to confirm.");
+  Serial.println();
+  Serial.print(F("SunRise (Alarm2) is set when all data is entered and you send 'Y' to confirm."));
   do
   {
     memset(buffer, 0, sizeof(buffer));
     Serial.println();
-    Serial.print("Enter Hour (2 digits, 24 hour clock, 00-23): ");
+    Serial.print(F("Enter Hour (2 digits, 24 hour clock, 00-23): "));
     while(!Serial.available()) ; // Wait until bytes
     Serial.readBytes(buffer, 2);
     while(Serial.available()) Serial.read(); 
@@ -85,21 +87,21 @@ void promptForSunRiseAlarm(Stream &Serial)
     
     memset(buffer, 0, sizeof(buffer));
     Serial.println();
-    Serial.print("Enter Minute (2 digits, 00-59): ");
+    Serial.print(F("Enter Minute (2 digits, 00-59): "));
     while(!Serial.available()) ; // Wait until bytes
     Serial.readBytes(buffer, 2);
     while(Serial.available()) Serial.read(); 
     int mins = atoi(buffer[0] == '0' ? buffer+1 : buffer);
 
     Serial.println();
-    Serial.print("Entered SunRise (Alarm2) @ "); 
+    Serial.print(F("Entered SunRise (Alarm2) @ ")); 
     //printTo(Serial, Settings);
     Serial.print(hr);
     Serial.print(":"); 
     Serial.print(mins); 
      
     Serial.println();
-    Serial.print("Send 'Y' to set SunRise (Alarm2), send 'N' to start again: ");
+    Serial.print(F("Send 'Y' to set SunRise (Alarm2), send 'N' to start again: "));
         
     while(!Serial.available()) ; // Wait until bytes
     Serial.readBytes(buffer, 1);
@@ -108,22 +110,24 @@ void promptForSunRiseAlarm(Stream &Serial)
     {
       setSunRise(1, hr, mins);    //mode 1 = set time this way
       Serial.println();
-      Serial.print("SunRise (Alarm2) set"); 
+      Serial.print(F("SunRise (Alarm2) set"));
+      Serial.println();
       break;
     }
   } while(1);   
 }
-#endif
+#endif */
 
 /*
  * Serial promt to set Alarm 1 - sunset
  */
-#ifdef SET_SUNSET_ALARM_BY_SERIAL
+/*#ifdef SET_SUNSET_ALARM_BY_SERIAL
 void promptForSunSetAlarm(Stream &Serial)
 {
   char buffer[3] = { 0 };
     
-  Serial.println("SunSet (Alarm1) is set when all data is entered and you send 'Y' to confirm.");
+  Serial.println();
+  Serial.print("SunSet (Alarm1) is set when all data is entered and you send 'Y' to confirm.");
   do
   {
     memset(buffer, 0, sizeof(buffer));
@@ -163,5 +167,5 @@ void promptForSunSetAlarm(Stream &Serial)
     }
   } while(1);   
 }
-#endif
+#endif */
 

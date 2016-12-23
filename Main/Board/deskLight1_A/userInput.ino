@@ -39,12 +39,14 @@ void button0() {
           if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
           _modeCur = _modePreset[_modePresetSlotCur];
           //write cur mode to memory ???
-          DEBUG_PRINT("user input - button 0 fell")
         } //END onOff
+          #ifdef DEBUG
+          Serial.print(F("button 0 - fell"));
+          Serial.println();
+        #endif
       } //END fell
       if(_button0.rose()) {
         //write cur mode to memory ???
-        DEBUG_PRINT("user input - button 0 rose")
       } //END rose
     
   } //END hasChanged0
