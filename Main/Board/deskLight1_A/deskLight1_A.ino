@@ -20,16 +20,17 @@
 
 // Tested on Arduino Pro Mini (5v, ATmega328, 16mhz clock speed, 32KB Flash, 2KB SRAM, 1KB EEPROM)
 
-
-#define DEBUG 1                             //comment/un-comment
-//#ifdef DEBUG     
+/* 
+ use if defined statements and comment out to disable debug mode 
+ this will remove all debug code when compiling rather than just switching off
+ for now only use serial when in debug 
+*/
+//#define DEBUG 1                            //comment/un-comment
+#ifdef DEBUG     
 //#define SET_TIME_BY_SERIAL 1                //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
-//#define SET_SUNRISE_ALARM_BY_SERIAL 1 //uses Alarm2 //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 1
-//#define SET_SUNSET_ALARM_BY_SERIAL 1 //uses Alarm1//(needs debug for serial) 'un-comment' to get a serial prompt at startup to set Alarm 2
-//#endif
+#endif
 
 /*----------------------------libraries----------------------------*/
-//#include <DebugUtils.h>   //have to restrict memory use //DEBUG_PRINT(str) - tool that spits out message and appropriate stamps for where in the program, what time, etc.
 #include <EEPROM.h>                       //a few saved settings
 #include <DS3231_Simple.h>                //DS3231 realtime clock (with AT24C32 memory backback)
 #include <Bounce2.h>                      //buttons with de-bounce
@@ -37,13 +38,8 @@
 #include <FastLED.h>                      //WS2812B LED strip control and effects
 
 /*----------------------------system----------------------------*/
-/* 
- use if defined statements and comment out to disable debug mode 
- this will remove all debug code when compiling rather than just switching off
- for now only use serial when in debug 
-*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.23";
+const String _progVers = "0.24";
 const int _mainLoopDelay = 0;               //just in case
 boolean _firstTimeSetupDone = false;        //starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;            //this should init false, then get activated by input - on/off true/false
@@ -58,8 +54,8 @@ typedef struct {
   boolean isStatic;                         //moving(false) or static(true) //everything is vibration
 } MODE_INFO;
 const int _modeNum = 9;
-const int _modePresetSlotNum = 3;
-int _modePreset[_modePresetSlotNum] = { 1, 4, 5 }; //test basic, tap bt to cycle around 3 mode slots   //expand to array or struct later for more presets
+const int _modePresetSlotNum = 4;
+int _modePreset[_modePresetSlotNum] = { 1, 4, 5, 0 }; //test basic, tap bt to cycle around a few mode slots   //expand to array or struct later for more presets
 volatile MODE_INFO modeInfo[_modeNum] = {
   { "glow", true },
   { "sunrise", false},
@@ -77,14 +73,14 @@ int _modePresetSlotCur = 0;                 //the current array pos (slot) in th
 /*-----------------RTC (DS3231 and AT24C32) on I2C------------------*/
 const int _DS3231interruptPin = 3;          //the alarm return from the DS3231 (INT/SQW pin on chip)
 DS3231_Simple RTC;                          //init realtime clock
-#define DS3231_I2C_ADDRESS 0x68             //default
-boolean _sunRiseEnabled = false;
-volatile boolean _sunRiseTriggered = false;
-boolean _sunSetEnabled = false;
-volatile boolean _sunSetTriggered = false;
-volatile boolean _sunRiseSetTriggered = false;
+#define DS3231_I2C_ADDRESS 0x68             //default - only used for interrupt kick
+//boolean _sunRiseEnabled = false;
+//volatile boolean _sunRiseTriggered = false;
+//boolean _sunSetEnabled = false;
+//volatile boolean _sunSetTriggered = false;
+//volatile boolean _sunRiseSetTriggered = false;
 int _sunRiseStateCur = 0;                   //current sunrise internal state (beginning, rise, end)
-int _sunSetStateCur = 0;                   //current sunset internal state (beginning, fall, end)
+int _sunSetStateCur = 0;                    //current sunset internal state (beginning, fall, end)
 
 /*----------------------------buttons----------------------------*/
 const int _button0Pin = 2;                  //#define BUTTON_0_PIN 2 _button0Pin
@@ -148,10 +144,9 @@ void setup() {
     Serial.println();
   #endif
   
-  setupInterrupts();
   RTC.begin();                              //DS3231 RealTimeClock begin..
   //RTC.formatEEPROM();
-  //RTC.disableAlarms();
+  setupInterrupts();
   delay(3000);                              //give the power, LED strip, etc. a couple of secs to stabilise
   setupLEDs();
   setupUserInputs();
@@ -160,21 +155,11 @@ void setup() {
     #ifdef SET_TIME_BY_SERIAL
       RTC.promptForTimeAndDate(Serial);
     #endif
-    Serial.println("Current date/time = ");
+    Serial.println(F("Current date/time = "));
     RTC.printTo(Serial);
-//    #ifdef SET_SUNRISE_ALARM_BY_SERIAL
-//      RTC.disableAlarms();
-//      promptForSunRiseAlarm(Serial);
-//    #endif
-//    #ifdef SET_SUNSET_ALARM_BY_SERIAL
-//      RTC.disableAlarms();
-//      promptForSunSetAlarm(Serial);
-//    #endif
-    RTC.disableAlarms();
-    setSunRise(1, 0, 30); //@07:30
-    setSunSet(1, 13, 16); //@18:45
   #endif
-
+  
+  setSunRise(9, 30);
   DS3231kickInterrupt();  //TEMP util
   
   #ifdef DEBUG
@@ -200,28 +185,25 @@ void loop() {
       _inputString = "";                    //clear the string:
       stringComplete = false;
     }
-    // To check the alarms we just ask the clock
-    uint8_t AlarmsFired = RTC.checkAlarms();
-    // Then can check if either alarm is fired (there are 2 alarms possible in the chip)
-    // by using a "bitwise and"
-    if(AlarmsFired & 1) {
-      RTC.printTo(Serial); Serial.println(": First alarm has fired!");
-    }
-    if(AlarmsFired & 2) {
-      RTC.printTo(Serial); Serial.println(": Second alarm has fired!");
-    }
+//    // To check the alarms we just ask the clock
+//    uint8_t AlarmsFired = RTC.checkAlarms();
+//    // Then can check if either alarm is fired (there are 2 alarms possible in the chip)
+//    // by using a "bitwise and"
+//    if(AlarmsFired & 1) {
+//      RTC.printTo(Serial); Serial.println(": First alarm has fired!");
+//    }
+//    if(AlarmsFired & 2) {
+//      RTC.printTo(Serial); Serial.println(": Second alarm has fired!");
+//    }
   #endif
 
   loopUserInputs();
   loopModes();
+  
   //clock extras
   //showTime();
-  //sunRiseSetCheck();  //call here so only calling once per frame
-  //sunRise();
-  //sunSet();
 
   FastLED.show();                           //send all the data to the strips
-  //FastLED.delay(8);
   FastLED.delay(1000 / UPDATES_PER_SECOND);
   //
   delay(_mainLoopDelay);

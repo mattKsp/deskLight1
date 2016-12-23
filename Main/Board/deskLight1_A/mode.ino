@@ -62,6 +62,8 @@ void mode0() {
       leds[i] = black;
     }
     fill_gradient_RGB(leds, ledSegment[3].first, black, ledSegment[3].last, startColor_RGB );
+    
+    addGlitter(80);
   }
   else {
     //

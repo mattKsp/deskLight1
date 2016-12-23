@@ -14,7 +14,6 @@ void mode1() {
   }
   else {
     sunRise();
-    addGlitter(80);
   }
   
 } //END mode1
@@ -25,58 +24,43 @@ void mode6() {
   //name should be sunset!
   //isStatic default is false
   if(modeInfo[6].isStatic) {
-    //
+    fadeToBlackBy( leds, _ledNum, 100);
   }
   else {
-    sunSet();
+    fadeToBlackBy( leds, _ledNum, 100);
   }
   
 } //END mode6
 
+
 /*----------------------------set----------------------------*/
-void setSunRise(int mode, uint8_t hour, uint8_t mins) {
-  setSunRiseSet(false, mode, hour, mins);
-}
 
-void setSunSet(int mode, uint8_t hour, uint8_t mins) {
-  setSunRiseSet(true, mode, hour, mins);
-}
-
-void setSunRiseSet(boolean riseSet, int mode, uint8_t hour, uint8_t mins) {
-  //sun rise/set is.. rise(false)/set(true)
+void setSunRise(uint8_t hour, uint8_t mins) {
   //mode 0 = natural (set rise to realtime) - Not used yet!
   //mode 1 = set time aswell (mabye link to alarm array entry)
-  //RTC.disableAlarms();                                                          //hmm.. power cuts? ..and how to specify 1 or both? write my own?
+  RTC.disableAlarms();                                                          //hmm.. power cuts? ..and how to specify 1 or both? write my own?
   DateTime MyTimestamp;
   MyTimestamp = RTC.read();                                                       //get an initialized timestamp to use
-  if(mode == 0) {
-    //read table from somewhere? is AT24C32 storage big enough?
-    //sat 17 dec 16 nautical twilight 17:12
-    MyTimestamp.Hour = 17;
-    MyTimestamp.Minute = 12;
-    MyTimestamp.Second = 0;
-  } else if(mode == 1) {
-    MyTimestamp.Hour = hour;
-    MyTimestamp.Minute = mins;
-    MyTimestamp.Second = 0;
-  }
-  if(riseSet == false) {
-    RTC.setAlarm(DS3231_Simple::ALARM_EVERY_MINUTE); 
-    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_MINUTE);
-    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_DAILY);                          //sun rise - Alarm 2 - ALARM_DAILY (on the hour and minute)
-    #ifdef DEBUG
-      Serial.println();
-      Serial.print(F("void setSunRiseSet (rise/Alarm2) "));
-      Serial.print(hour);
-      Serial.print(":"); 
-      Serial.print(mins);
-      Serial.println();
-    #endif
-  } else {
-    RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_EVERY_SECOND); 
+  MyTimestamp.Hour = hour;
+  MyTimestamp.Minute = mins;
+  MyTimestamp.Second = 0;
+  
+  //RTC.setAlarm(DS3231_Simple::ALARM_EVERY_MINUTE); 
+  //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_MINUTE);
+  RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_DAILY);                          //sun rise - Alarm 2 - ALARM_DAILY (on the hour and minute)
+  
+    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_EVERY_SECOND); 
     //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND); 
     //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND_MINUTE_HOUR);       //sun set - Alarm 1 - ALARM_MATCH_SECOND_MINUTE_HOUR
-  }
+  
+  #ifdef DEBUG
+    Serial.println();
+    Serial.print(F("void setSunRiseSet (rise/Alarm2) "));
+    Serial.print(hour);
+    Serial.print(":"); 
+    Serial.print(mins);
+    Serial.println();
+  #endif
 }
 
 /*----------------------------do----------------------------*/
@@ -89,7 +73,6 @@ void setSunRiseSet(boolean riseSet, int mode, uint8_t hour, uint8_t mins) {
  * do rise
  * end
  */
- //TOSO - need to wrap-up rise/set into one call !!!
  unsigned long _sunRiseInterval = 0; // the time we need to wait //calculated at runtime
 unsigned long _sunRisePreviousMillis = 0; // millis() returns an unsigned long.
 
@@ -181,20 +164,4 @@ void sunRise() {
 */
   
 } //END sunRise
-
-void sunSet() {
-  //if(_sunSetEnabled) {
-    
-    //if lights are currently off..
-    //save state,
-    //then fade eveything to start levels
-    //..now do sunset
-    //
-    //when sunset is finished either stay bright, or change(fade) to previous levels
-    //set tomorrows sunset time
-    //_sunSetEnabled = false; //switch everything off and lock the doors behind you, ..until next time
-    
-  //}
-}
-
 
