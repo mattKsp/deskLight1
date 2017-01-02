@@ -13,7 +13,6 @@ void sunRiseSetInterrupt() {
   //sunRiseSetCheck();
   if(_firstTimeSetupDone) {
     _modeCur == 1;
-    modeInfo[1].isStatic = false;
     _sunRiseStateCur = 0;
     _onOff = true;
   }

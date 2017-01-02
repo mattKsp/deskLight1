@@ -25,22 +25,32 @@
  this will remove all debug code when compiling rather than just switching off
  for now only use serial when in debug 
 */
-//#define DEBUG 1                            //comment/un-comment
+//#define DEBUG 1                           //comment/un-comment
 #ifdef DEBUG     
-//#define SET_TIME_BY_SERIAL 1                //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
+//#define SET_TIME_BY_SERIAL 1              //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
 #endif
+const int _DS3231interruptPin = 3;        //the alarm return from the DS3231 (INT/SQW pin on chip)
+//const int _button0Pin = 2;                //#define BUTTON_0_PIN 2 _button0Pin
+const int _ledPin = 13;                   //built-in LED
+const int _ledDOutPin = 6;                //DOut -> LED strip DIn
+const int _capSenseSendPin = 7;           //capacitive touch sensor (send)
+const int _capSense0Pin = 8;              //on/off (receive) - note: all other touch sensors will trigger 'on' if 'off', aswell as this pin..
+const int _capSense1Pin = 9;              //mode - capacitive touch sensor (receive)
+//const int _capSense2Pin = 10;              //sub-mode - capacitive touch sensor (receive) - not in use yet
+//const int _capSense3Pin = 11;             //volume up - capacitive touch sensor (receive)
+//const int _capSense4Pin = 12;             //volume down - capacitive touch sensor (receive)
 
 /*----------------------------libraries----------------------------*/
 #include <EEPROM.h>                       //a few saved settings
 #include <DS3231_Simple.h>                //DS3231 realtime clock (with AT24C32 memory backback)
-#include <Bounce2.h>                      //buttons with de-bounce
+//#include <Bounce2.h>                      //buttons with de-bounce
 #include <CapacitiveSensor.h>             //capacitive touch sensors
 #include <FastLED.h>                      //WS2812B LED strip control and effects
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.24";
-const int _mainLoopDelay = 0;               //just in case
+const String _progVers = "0.25";
+//const int _mainLoopDelay = 0;               //just in case  - using FastLED.delay instead..
 boolean _firstTimeSetupDone = false;        //starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;            //this should init false, then get activated by input - on/off true/false
 #ifdef DEBUG
@@ -49,29 +59,13 @@ boolean stringComplete = false;             // whether the string is complete
 #endif
 
 /*----------------------------modes----------------------------*/
-typedef struct {
-  String mName;                             //added 'm' prefix to orig as 'name' has a.. wait for it.. a 'name' clash with.. 'name' ..bang, crash!
-  boolean isStatic;                         //moving(false) or static(true) //everything is vibration
-} MODE_INFO;
 const int _modeNum = 9;
-const int _modePresetSlotNum = 4;
-int _modePreset[_modePresetSlotNum] = { 1, 4, 5, 0 }; //test basic, tap bt to cycle around a few mode slots   //expand to array or struct later for more presets
-volatile MODE_INFO modeInfo[_modeNum] = {
-  { "glow", true },
-  { "sunrise", false},
-  { "morning", false},
-  { "day", false},
-  { "working", true},
-  { "evening", false},
-  { "sunset", false},
-  { "night", false},
-  { "changing", false}
-};
-volatile int _modeCur = 1;                  //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
+const int _modePresetSlotNum = 7;
+int _modePreset[_modePresetSlotNum] = { 0, 2, 3, 4, 5, 7, 8 }; //test basic, tap bt to cycle around a few mode slots   //expand to array or struct later for more presets
+volatile int _modeCur = 0;                  //current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
 int _modePresetSlotCur = 0;                 //the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 
 /*-----------------RTC (DS3231 and AT24C32) on I2C------------------*/
-const int _DS3231interruptPin = 3;          //the alarm return from the DS3231 (INT/SQW pin on chip)
 DS3231_Simple RTC;                          //init realtime clock
 #define DS3231_I2C_ADDRESS 0x68             //default - only used for interrupt kick
 //boolean _sunRiseEnabled = false;
@@ -82,15 +76,23 @@ DS3231_Simple RTC;                          //init realtime clock
 int _sunRiseStateCur = 0;                   //current sunrise internal state (beginning, rise, end)
 int _sunSetStateCur = 0;                    //current sunset internal state (beginning, fall, end)
 
-/*----------------------------buttons----------------------------*/
-const int _button0Pin = 2;                  //#define BUTTON_0_PIN 2 _button0Pin
-const unsigned long _buttonDebounceTime = 5; //unsigned long (5ms)
-Bounce _button0 = Bounce();                 //Instantiate a Bounce object
-boolean _button0Toggled = false;
+///*----------------------------buttons----------------------------*/
+//const unsigned long _buttonDebounceTime = 5; //unsigned long (5ms)
+//Bounce _button0 = Bounce();                 //Instantiate a Bounce object
+//boolean _button0Toggled = false;
 
 /*----------------------------touch sensors----------------------------*/
-//int _touchSensorsTotal = 3;
-boolean _touchSensorToggled[3];
+CapacitiveSensor _touch0 = CapacitiveSensor(_capSenseSendPin,_capSense0Pin);  //on/off
+CapacitiveSensor _touch1 = CapacitiveSensor(_capSenseSendPin,_capSense1Pin);  //mode
+//CapacitiveSensor _touch2 = CapacitiveSensor(_capSenseSendPin,_capSense2Pin);  //sub-mode
+//CapacitiveSensor _touch3 = CapacitiveSensor(_capSenseSendPin,_capSense3Pin);  //brightness up
+//CapacitiveSensor _touch4 = CapacitiveSensor(_capSenseSendPin,_capSense4Pin);  //brightness down
+
+byte _touchSensorRes = 20;                  //sample/sensor resolution - higher is better but slower to read
+long _touchSensorThreshold = 100;           //unsigned long   //1 for all at the moment
+const long _touchDeBounceInterval = 500;                            //interval to de-bounce in milliseconds    //const int 
+long _touchPrevMillis[5] = { 0, 0, 0, 0, 0 };                       //how long between 'bounces' //unsigned long
+boolean _touchToggled[5] = { false, false, false, false, false };
 
 /*----------------------------LED----------------------------*/
 typedef struct {
@@ -98,25 +100,19 @@ typedef struct {
   byte last;
   byte total;
 } LED_SEGMENT;
-const int _ledPin = 13;                     //built-in LED
-const int _ledDOutPin = 6;                  //DOut -> LED strip DIn
 const int _ledNum = 150;                    //5m strip with 150 LEDs
 //const int _ledNum = 40;     //TEMP testing - 55 on roll, using 40
 const int _segmentTotal = 4;                //more later..
 const int _ledGlobalBrightness = 255;          //global brightness
-#define UPDATES_PER_SECOND 100              //main loop FastLED show delay
+int _ledGlobalBrightnessCur = 255;              //current global brightness - adjust this
+int _ledBrightnessIncDecAmount = 10;            //the brightness amount to increase or decrease
+#define UPDATES_PER_SECOND 120              //main loop FastLED show delay  //100
 LED_SEGMENT ledSegment[_segmentTotal] = { 
   { 0, 11, 12 }, 
   { 12, 46, 35 }, 
   { 47, 59, 12 },
   { 60, 94, 34 }
-};
-//LED_SEGMENT ledSegment[_segmentTotal] = { 
-//  { 0, 9, 10 }, 
-//  { 10, 19, 10 }, 
-//  { 20, 29, 10 },
-//  { 30, 39, 10 }
-//};                                
+};                     
 CHSV startColor( 144, 70, 64 );
 CHSV endColor( 31, 71, 69 );
 CRGB startColor_RGB( 3, 144, 232 );
@@ -159,7 +155,7 @@ void setup() {
     RTC.printTo(Serial);
   #endif
   
-  setSunRise(9, 30);
+  setSunRise(9, 30);      //TEMP
   DS3231kickInterrupt();  //TEMP util
   
   #ifdef DEBUG
@@ -206,7 +202,7 @@ void loop() {
   FastLED.show();                           //send all the data to the strips
   FastLED.delay(1000 / UPDATES_PER_SECOND);
   //
-  delay(_mainLoopDelay);
+  //delay(_mainLoopDelay);                  //using FastLED.delay instead..
 }
 
 

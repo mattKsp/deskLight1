@@ -28,7 +28,6 @@
  */
 void loopModes() {
   if (_onOff) {
-    
     if(_modeCur == 0) {       mode0(); } 
     else if(_modeCur == 1) {  mode1(); }
     else if(_modeCur == 2) {  mode2(); }
@@ -38,7 +37,6 @@ void loopModes() {
     else if(_modeCur == 6) {  mode6(); }
     else if(_modeCur == 7) {  mode7(); }
     else if(_modeCur == 8) {  mode8(); }
- 
   } 
   else { fadeToBlackBy( leds, _ledNum, 30); } //turn off - fade everything to black
 }
@@ -46,59 +44,49 @@ void loopModes() {
 
 /*----------------------------modes----------------------------*/
 void mode0() {
-
   //name should be glow!
   //default is static (with a few sparkles)
-  if(modeInfo[0].isStatic) {
-    //gradient - start color to end color
-    //CHSV black = CHSV(0,0,0);
-    CRGB black = CRGB(0,0,0);               //sure there's a preset for these somewhere in the FastLED libray..
-    
     for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
       leds[i] = startColor_RGB;
     }
-    fill_gradient_RGB(leds, ledSegment[1].first, startColor_RGB, ledSegment[1].last, black);
+    fill_gradient_RGB(leds, ledSegment[1].first, CRGB(32, 32, 32), ledSegment[1].last, CRGB::Black);
     for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
-      leds[i] = black;
+      leds[i] = CRGB::Black;
     }
-    fill_gradient_RGB(leds, ledSegment[3].first, black, ledSegment[3].last, startColor_RGB );
+    fill_gradient_RGB(leds, ledSegment[3].first, CRGB::Black, ledSegment[3].last, CRGB(32, 32, 32) );
     
     addGlitter(80);
-  }
-  else {
-    //
-  }
-  
 }
+
 //
+
 void mode2() {
-
   //name should be morning!
-  if(modeInfo[2].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(0, 0, 255));
-  }
-  else {
-    fill_solid( leds, _ledNum, CRGB(0, 0, 255));
-  }
-  
+    for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
+      leds[i] = CRGB::Yellow;
+    }
+    fill_gradient_RGB(leds, ledSegment[1].first, CRGB::Yellow, ledSegment[1].last, CRGB::Black);
+    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
+      leds[i] = CRGB::Black;
+    }
+    fill_gradient_RGB(leds, ledSegment[3].first, CRGB::Black, ledSegment[3].last, CRGB::Yellow );
 }
+
 void mode3() {
-
   //name should be day!
-  if(modeInfo[3].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(255, 255, 0));
-  }
-  else {
-    fill_solid( leds, _ledNum, CRGB(255, 255, 0));
-  }
-  
+    for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
+      leds[i] = CRGB::Green;
+    }
+    fill_gradient_RGB(leds, ledSegment[1].first, CRGB::Green, ledSegment[1].last, CRGB::Yellow);
+    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
+      leds[i] = CRGB::Yellow;
+    }
+    fill_gradient_RGB(leds, ledSegment[3].first, CRGB::Yellow, ledSegment[3].last, CRGB::Green );
 }
-void mode4() {
 
+void mode4() {
   //name should be working!
-  //isStatic should be true
-  if(modeInfo[4].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(0, 255, 0));  //TEMP colour
+    fill_solid( leds, _ledNum, CRGB::White);  //TEMP colour
 /*
  //sub temperature modes later..
   if(_mode0_sub == 0) {
@@ -139,45 +127,30 @@ void mode4() {
     leds[0] = TEMPERATURE_8;
   }
   */
-  }
-  else {
-    fill_solid( leds, _ledNum, CRGB(0, 255, 0));  //TEMP colour
-  }
-  
 }
+
 void mode5() {
-
   //name should be evening!
-  if(modeInfo[5].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(255, 64, 64));
-  }
-  else {
-    fill_solid( leds, _ledNum, CRGB(255, 64, 64));
-  }
-  
+    fill_solid( leds, _ledNum, CRGB(128, 64, 64));
 }
+
 //
+
 void mode7() {
-
   //name should be night!
-  if(modeInfo[7].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(64, 64, 64));
-  }
-  else {
-    fill_solid( leds, _ledNum, CRGB(64, 64, 64));
-  }
-  
+   for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
+      leds[i] = CRGB::Black;
+    }
+    fill_gradient_RGB(leds, ledSegment[1].first, CRGB::Black, ledSegment[1].last, CRGB::White);
+    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
+      leds[i] = CRGB::White;
+    }
+    fill_gradient_RGB(leds, ledSegment[3].first, CRGB::White, ledSegment[3].last, CRGB::Black );
 }
-void mode8() {
 
+void mode8() {
   //name should be changing!
-  if(modeInfo[8].isStatic) {
-    fill_solid( leds, _ledNum, CRGB(0, 255, 0));
-  }
-  else {
-    fill_solid( leds, _ledNum, CRGB(0, 255, 0));
-  }
-  
+    fill_solid( leds, _ledNum, CRGB(0, 0, 255));
 }
 
 

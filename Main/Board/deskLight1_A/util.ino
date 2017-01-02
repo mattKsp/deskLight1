@@ -1,7 +1,7 @@
 /*----------------------------util----------------------------*/
 
 /*
-  DS3231 - kick the interrupt
+  DS3231 - 'kick the interrupt'
   TEMP - just to make sure interrupt output pin SQW gets turned on
   enables interrupt pin, alarm 2 and alarm
  */
@@ -10,6 +10,41 @@ void DS3231kickInterrupt() {
   Wire.write(0x0E);                         //control location
   Wire.write(B00000111);                    //..this!
   Wire.endTransmission();
+}
+
+/*
+ * Mode utils
+ */
+void incrementPresetSlot() {
+  _modePresetSlotCur += 1;
+  incDecPresSlot_prtB();
+}
+void decrementPresetSlot() {
+  _modePresetSlotCur -= 1;
+  incDecPresSlot_prtB();
+}
+void incDecPresSlot_prtB() {
+  if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
+  _modeCur = _modePreset[_modePresetSlotCur];
+}
+
+/*
+ * Golbal brightness utils
+ */
+void increaseBrightness() {
+  _ledGlobalBrightnessCur += _ledBrightnessIncDecAmount;
+  brightnessRolloverCatch();
+}
+void decreaseBrightness() {
+  _ledGlobalBrightnessCur -= _ledBrightnessIncDecAmount;
+  brightnessRolloverCatch();
+}
+void brightnessRolloverCatch() {
+  if(_ledGlobalBrightnessCur > 255) {
+    _ledGlobalBrightnessCur = 255;
+  } else if(_ledGlobalBrightnessCur < 0) {
+    _ledGlobalBrightnessCur = 0;
+  }
 }
 
 /*

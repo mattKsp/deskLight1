@@ -5,16 +5,8 @@
  * eg. for testing/demo porpoises
  */
 void mode1() {
-  
   //name should be sunrise!
-  //isStatic default is false
-  //if triggered by an alarm, then temporarily make sure isStatic is set to false
-  if(modeInfo[1].isStatic) {
-    //show hyperthetical mid-point levels
-  }
-  else {
     sunRise();
-  }
   
 } //END mode1
 
@@ -22,13 +14,7 @@ void mode1() {
 void mode6() {
   
   //name should be sunset!
-  //isStatic default is false
-  if(modeInfo[6].isStatic) {
     fadeToBlackBy( leds, _ledNum, 100);
-  }
-  else {
-    fadeToBlackBy( leds, _ledNum, 100);
-  }
   
 } //END mode6
 
@@ -73,7 +59,7 @@ void setSunRise(uint8_t hour, uint8_t mins) {
  * do rise
  * end
  */
- unsigned long _sunRiseInterval = 0; // the time we need to wait //calculated at runtime
+unsigned long _sunRiseInterval = 0; // the time we need to wait //calculated at runtime
 unsigned long _sunRisePreviousMillis = 0; // millis() returns an unsigned long.
 
 void sunRise() {
@@ -83,7 +69,7 @@ void sunRise() {
   //time interval for each step (ms)
   //levels for each step
 
-  _sunRiseInterval = 10000;
+  _sunRiseInterval = 1000000;
   
   unsigned long _sunRiseCurrentMillis;// = millis(); //empty ok?            //get current time //not really necessary, but didn't want to leave it empty in case..
 
@@ -134,9 +120,10 @@ void sunRise() {
     
     //wait for the appropriate divison of time
     if ((unsigned long)(_sunRiseCurrentMillis - _sunRisePreviousMillis) >= _sunRiseInterval) {
-      _modePresetSlotCur += 1;
-      if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
-      _modeCur = _modePreset[_modePresetSlotCur];
+//      _modePresetSlotCur += 1;
+//      if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
+//      _modeCur = _modePreset[_modePresetSlotCur];
+       _modeCur = 2;                                            //now go to morning setting
       //_modePresetSlotCur += 1;                                  //TEMP - next mode
       _sunRiseStateCur = 0;                                     //reset for next time
       _sunRisePreviousMillis = millis();                                 //save the current time for next round
