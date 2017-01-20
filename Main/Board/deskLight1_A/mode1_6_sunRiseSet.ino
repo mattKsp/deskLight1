@@ -6,7 +6,18 @@
  */
 void mode1() {
   //name should be sunrise!
-    sunRise();
+    //sunRise();
+
+    //TEMP
+    for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
+      leds[i] = startColor_RGB;
+    }
+    fill_gradient_RGB(leds, ledSegment[1].first, CRGB(32, 32, 32), ledSegment[1].last, CRGB::Black);
+    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
+      leds[i] = CRGB::Black;
+    }
+    fill_gradient_RGB(leds, ledSegment[3].first, CRGB::Black, ledSegment[3].last, CRGB(32, 32, 32) );
+    //END TEMP
   
 } //END mode1
 

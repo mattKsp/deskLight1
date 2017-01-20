@@ -38,7 +38,10 @@ void loopModes() {
     else if(_modeCur == 7) {  mode7(); }
     else if(_modeCur == 8) {  mode8(); }
   } 
-  else { fadeToBlackBy( leds, _ledNum, 30); } //turn off - fade everything to black
+  else { 
+    //fadeToBlackBy( leds, _ledNum, 30); 
+    fill_solid( leds, _ledNum, CRGB::Black);  //TEMP colour
+  } //turn off - fade everything to black
 }
 
 
@@ -55,7 +58,7 @@ void mode0() {
     }
     fill_gradient_RGB(leds, ledSegment[3].first, CRGB::Black, ledSegment[3].last, CRGB(32, 32, 32) );
     
-    addGlitter(80);
+    //addGlitter(80);
 }
 
 //

@@ -25,7 +25,7 @@
  this will remove all debug code when compiling rather than just switching off
  for now only use serial when in debug 
 */
-//#define DEBUG 1                           //comment/un-comment
+#define DEBUG 1                           //comment/un-comment
 #ifdef DEBUG     
 //#define SET_TIME_BY_SERIAL 1              //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
 #endif
@@ -49,7 +49,7 @@ const int _capSense1Pin = 9;              //mode - capacitive touch sensor (rece
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.25";
+const String _progVers = "0.257";
 //const int _mainLoopDelay = 0;               //just in case  - using FastLED.delay instead..
 boolean _firstTimeSetupDone = false;        //starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;            //this should init false, then get activated by input - on/off true/false
@@ -88,9 +88,9 @@ CapacitiveSensor _touch1 = CapacitiveSensor(_capSenseSendPin,_capSense1Pin);  //
 //CapacitiveSensor _touch3 = CapacitiveSensor(_capSenseSendPin,_capSense3Pin);  //brightness up
 //CapacitiveSensor _touch4 = CapacitiveSensor(_capSenseSendPin,_capSense4Pin);  //brightness down
 
-byte _touchSensorRes = 20;                  //sample/sensor resolution - higher is better but slower to read
-long _touchSensorThreshold = 100;           //unsigned long   //1 for all at the moment
-const long _touchDeBounceInterval = 500;                            //interval to de-bounce in milliseconds    //const int 
+byte _touchSensorRes = 50;     //50          //sample/sensor resolution - higher is better but slower to read
+long _touchSensorThreshold = 2000;           //unsigned long   //1 for all at the moment
+const long _touchDeBounceInterval = 1000;   //500                    //interval to de-bounce in milliseconds    //const int 
 long _touchPrevMillis[5] = { 0, 0, 0, 0, 0 };                       //how long between 'bounces' //unsigned long
 boolean _touchToggled[5] = { false, false, false, false, false };
 
@@ -155,15 +155,15 @@ void setup() {
     RTC.printTo(Serial);
   #endif
   
-  setSunRise(9, 30);      //TEMP
+  //setSunRise(9, 30);      //TEMP
   DS3231kickInterrupt();  //TEMP util
   
   #ifdef DEBUG
   //everything done? ok then..
     Serial.print(F("Setup done"));
     Serial.println();
-    blinkStatusLED();
   #endif
+  blinkStatusLED();
 }
 
 void loop() {

@@ -55,18 +55,20 @@ void loopUserInputs() {
 /*----------------------------touch sensors----------------------------*/
 void touchSensors() {
 
-
   /*---------------touch sensor 0 - on/off--------------*/
   if(_touchToggled[0] == false) {
     long touch0read = _touch0.capacitiveSensor(_touchSensorRes);     //mode
     #ifdef DEBUG
-      //Serial.print(touch0read);
+      Serial.print(touch0read);
       //Serial.print(" 0toggled == false");
-      //Serial.println();
+      Serial.println();
     #endif
     if(touch0read > _touchSensorThreshold) {
       _touchToggled[0] = true;                      //toggle so we can block re-bounce
       _touchPrevMillis[0] = millis();               //store the current time
+      
+      //_touchToggled[1] = true;  //try this aswell
+      //_touchPrevMillis[1] = millis();               //store the current time
       
       _onOff = !_onOff;                         //flip the lights
          
@@ -85,14 +87,17 @@ void touchSensors() {
   if(_touchToggled[1] == false) {
     long touch1read = _touch1.capacitiveSensor(_touchSensorRes);     //mode
     #ifdef DEBUG
-      //Serial.print(touch1read);
+      Serial.print(touch1read);
       //Serial.print(" 1toggled == false");
-      //Serial.println();
+      Serial.println();
     #endif
     if(touch1read > _touchSensorThreshold) {
       _touchToggled[1] = true;                    //toggle so we can block re-bounce
       //_touch0prevMicros = micros();               //store the current time
       _touchPrevMillis[1] = millis();               //store the current time
+      
+      //_touchToggled[0] = true;  //try this aswell
+      //_touchPrevMillis[0] = millis();               //store the current time
       
       if(_onOff == false) {
         _onOff = true;  //if the lights are already off, then turn them on
