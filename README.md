@@ -1,4 +1,4 @@
-# deskLight1_A
+# deskLight1
 LED desk light, by Thurstan
 
 Repository is an Arduino project
