@@ -29,27 +29,28 @@
 #ifdef DEBUG     
 //#define SET_TIME_BY_SERIAL 1              //(needs debug for serial) 'un-comment' to get a serial prompt at startup to set the time. set time. then 'comment' and upload again
 #endif
-const int _DS3231interruptPin = 3;        //the alarm return from the DS3231 (INT/SQW pin on chip)
-//const int _button0Pin = 2;                //#define BUTTON_0_PIN 2 _button0Pin
+const int _button0Pin = 2;                //#define BUTTON_0_PIN 2 _button0Pin
+const int _button1Pin = 3;                //#define BUTTON_1_PIN 2 _button1Pin
+//const int _DS3231interruptPin = 3;        //the alarm return from the DS3231 (INT/SQW pin on chip)
 const int _ledPin = 13;                   //built-in LED
 const int _ledDOutPin = 6;                //DOut -> LED strip DIn
-const int _capSenseSendPin = 7;           //capacitive touch sensor (send)
-const int _capSense0Pin = 8;              //on/off (receive) - note: all other touch sensors will trigger 'on' if 'off', aswell as this pin..
-const int _capSense1Pin = 9;              //mode - capacitive touch sensor (receive)
+//const int _capSenseSendPin = 7;           //capacitive touch sensor (send)
+//const int _capSense0Pin = 8;              //on/off (receive) - note: all other touch sensors will trigger 'on' if 'off', aswell as this pin..
+//const int _capSense1Pin = 9;              //mode - capacitive touch sensor (receive)
 //const int _capSense2Pin = 10;              //sub-mode - capacitive touch sensor (receive) - not in use yet
-//const int _capSense3Pin = 11;             //volume up - capacitive touch sensor (receive)
-//const int _capSense4Pin = 12;             //volume down - capacitive touch sensor (receive)
+//const int _capSense3Pin = 11;             //brightness up - capacitive touch sensor (receive)
+//const int _capSense4Pin = 12;             //brightness down - capacitive touch sensor (receive)
 
 /*----------------------------libraries----------------------------*/
-#include <EEPROM.h>                       //a few saved settings
-#include <DS3231_Simple.h>                //DS3231 realtime clock (with AT24C32 memory backback)
-//#include <Bounce2.h>                      //buttons with de-bounce
-#include <CapacitiveSensor.h>             //capacitive touch sensors
+//#include <EEPROM.h>                       //a few saved settings
+//#include <DS3231_Simple.h>                //DS3231 realtime clock (with AT24C32 memory backback)
+#include <Bounce2.h>                      //buttons with de-bounce
+//#include <CapacitiveSensor.h>             //capacitive touch sensors
 #include <FastLED.h>                      //WS2812B LED strip control and effects
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.257";
+const String _progVers = "0.26";            //moved DS3231 to leaningBookShelvesLight1_A and swapped touch for buttons (until can get shielded wire etc.)
 //const int _mainLoopDelay = 0;               //just in case  - using FastLED.delay instead..
 boolean _firstTimeSetupDone = false;        //starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;            //this should init false, then get activated by input - on/off true/false
@@ -66,33 +67,35 @@ volatile int _modeCur = 0;                  //current mode in use - this is not 
 int _modePresetSlotCur = 0;                 //the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 
 /*-----------------RTC (DS3231 and AT24C32) on I2C------------------*/
-DS3231_Simple RTC;                          //init realtime clock
-#define DS3231_I2C_ADDRESS 0x68             //default - only used for interrupt kick
-//boolean _sunRiseEnabled = false;
-//volatile boolean _sunRiseTriggered = false;
-//boolean _sunSetEnabled = false;
-//volatile boolean _sunSetTriggered = false;
-//volatile boolean _sunRiseSetTriggered = false;
-int _sunRiseStateCur = 0;                   //current sunrise internal state (beginning, rise, end)
-int _sunSetStateCur = 0;                    //current sunset internal state (beginning, fall, end)
+//DS3231_Simple RTC;                          //init realtime clock
+//#define DS3231_I2C_ADDRESS 0x68             //default - only used for interrupt kick
+////boolean _sunRiseEnabled = false;
+////volatile boolean _sunRiseTriggered = false;
+////boolean _sunSetEnabled = false;
+////volatile boolean _sunSetTriggered = false;
+////volatile boolean _sunRiseSetTriggered = false;
+//int _sunRiseStateCur = 0;                   //current sunrise internal state (beginning, rise, end)
+//int _sunSetStateCur = 0;                    //current sunset internal state (beginning, fall, end)
 
 ///*----------------------------buttons----------------------------*/
-//const unsigned long _buttonDebounceTime = 5; //unsigned long (5ms)
-//Bounce _button0 = Bounce();                 //Instantiate a Bounce object
-//boolean _button0Toggled = false;
+const unsigned long _buttonDebounceTime = 5; //unsigned long (5ms)
+Bounce _button0 = Bounce();                 //Instantiate a Bounce object
+Bounce _button1 = Bounce();                 //Instantiate a Bounce object
+boolean _button0Toggled = false;
+boolean _button1Toggled = false;
 
 /*----------------------------touch sensors----------------------------*/
-CapacitiveSensor _touch0 = CapacitiveSensor(_capSenseSendPin,_capSense0Pin);  //on/off
-CapacitiveSensor _touch1 = CapacitiveSensor(_capSenseSendPin,_capSense1Pin);  //mode
+//CapacitiveSensor _touch0 = CapacitiveSensor(_capSenseSendPin,_capSense0Pin);  //on/off
+//CapacitiveSensor _touch1 = CapacitiveSensor(_capSenseSendPin,_capSense1Pin);  //mode
 //CapacitiveSensor _touch2 = CapacitiveSensor(_capSenseSendPin,_capSense2Pin);  //sub-mode
 //CapacitiveSensor _touch3 = CapacitiveSensor(_capSenseSendPin,_capSense3Pin);  //brightness up
 //CapacitiveSensor _touch4 = CapacitiveSensor(_capSenseSendPin,_capSense4Pin);  //brightness down
 
-byte _touchSensorRes = 50;     //50          //sample/sensor resolution - higher is better but slower to read
-long _touchSensorThreshold = 2000;           //unsigned long   //1 for all at the moment
-const long _touchDeBounceInterval = 1000;   //500                    //interval to de-bounce in milliseconds    //const int 
-long _touchPrevMillis[5] = { 0, 0, 0, 0, 0 };                       //how long between 'bounces' //unsigned long
-boolean _touchToggled[5] = { false, false, false, false, false };
+//byte _touchSensorRes = 50;     //50          //sample/sensor resolution - higher is better but slower to read
+//long _touchSensorThreshold = 2000;           //unsigned long   //1 for all at the moment
+//const long _touchDeBounceInterval = 1000;   //500                    //interval to de-bounce in milliseconds    //const int 
+//long _touchPrevMillis[5] = { 0, 0, 0, 0, 0 };                       //how long between 'bounces' //unsigned long
+//boolean _touchToggled[5] = { false, false, false, false, false };
 
 /*----------------------------LED----------------------------*/
 typedef struct {
@@ -140,23 +143,23 @@ void setup() {
     Serial.println();
   #endif
   
-  RTC.begin();                              //DS3231 RealTimeClock begin..
+  //RTC.begin();                              //DS3231 RealTimeClock begin..
   //RTC.formatEEPROM();
-  setupInterrupts();
+  //setupInterrupts();
   delay(3000);                              //give the power, LED strip, etc. a couple of secs to stabilise
   setupLEDs();
   setupUserInputs();
-
-  #ifdef DEBUG
-    #ifdef SET_TIME_BY_SERIAL
-      RTC.promptForTimeAndDate(Serial);
-    #endif
-    Serial.println(F("Current date/time = "));
-    RTC.printTo(Serial);
-  #endif
-  
+//
+//  #ifdef DEBUG
+//    #ifdef SET_TIME_BY_SERIAL
+//      RTC.promptForTimeAndDate(Serial);
+//    #endif
+//    Serial.println(F("Current date/time = "));
+//    RTC.printTo(Serial);
+//  #endif
+//  
   //setSunRise(9, 30);      //TEMP
-  DS3231kickInterrupt();  //TEMP util
+  //DS3231kickInterrupt();  //TEMP util
   
   #ifdef DEBUG
   //everything done? ok then..

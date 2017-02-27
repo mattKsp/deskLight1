@@ -93,55 +93,55 @@
 
 /*------------------LED overlays-----------------*/
 //these will probably be overlaid onto whatever is showing at the time
-
-const int _showTimeUpdateInterval = 1000;   //1 sec = 1000 milliseconds
-unsigned long _previousMillis = 0;
-
-void showTime() {
-  //need actual realtime clock to be able to do this, so fake it to try
-  //time in 12 hour format
-  //..got one..
-//  byte sec, mins, hr, day, date, month, year; //set empty bytes
-//  DS3231getTime(&sec, &mins, &hr, &day, &date, &month, &year);  //get results from the RTC and copy onto the empty bytes
-  //use bytes..
-  //int _hour = 3;
-  //int _minute = 25;
-  //int i = map(decToInt(hr), 0, 12, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
-  //int j = map(decToInt(mins), 0, 60, _segmentStart[0], _segmentEnd[_segmentTotal-1]);
-  unsigned long currentMillis = millis();   //save state
-  if((unsigned long)(currentMillis - _previousMillis) >=  _showTimeUpdateInterval) {
-    DateTime MyDateAndTime;
-    MyDateAndTime = RTC.read();
-    
-    int i = map(MyDateAndTime.Hour, 0, 12, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
-    int j = map(MyDateAndTime.Minute, 0, 60, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
-    int k = map(MyDateAndTime.Second, 0, 60, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
-    leds[i] = -leds[i];                     //invert
-    leds[j] = -leds[j];                     //invert
-    leds[k] = -leds[k];                     //invert
-    leds[i] += CRGB( 20, 0, 0);             //add a little red
-    leds[j] += CRGB( 0, 20, 0);             //add a little green
-    leds[k] += CRGB( 0, 0, 20);             //add a little blue
-
-    #ifdef DEBUG
-      Serial.print(MyDateAndTime.Hour);
-      Serial.print(":");
-      Serial.print(MyDateAndTime.Minute);
-      Serial.print(".");
-      Serial.print(MyDateAndTime.Second);
-      Serial.print(" - ");
-      Serial.print(MyDateAndTime.Minute);
-      Serial.print("/");
-      Serial.print(MyDateAndTime.Day);
-      Serial.print("/");
-      Serial.print(MyDateAndTime.Month);
-      Serial.print("/");
-      Serial.print(MyDateAndTime.Year);
-      Serial.println(" ");
-    #endif
-    
-    _previousMillis = currentMillis;        //save state for next time around
-  }
-}
-
+//
+//const int _showTimeUpdateInterval = 1000;   //1 sec = 1000 milliseconds
+//unsigned long _previousMillis = 0;
+//
+//void showTime() {
+//  //need actual realtime clock to be able to do this, so fake it to try
+//  //time in 12 hour format
+//  //..got one..
+////  byte sec, mins, hr, day, date, month, year; //set empty bytes
+////  DS3231getTime(&sec, &mins, &hr, &day, &date, &month, &year);  //get results from the RTC and copy onto the empty bytes
+//  //use bytes..
+//  //int _hour = 3;
+//  //int _minute = 25;
+//  //int i = map(decToInt(hr), 0, 12, _segmentEnd[_segmentTotal-1], _segmentStart[0] );
+//  //int j = map(decToInt(mins), 0, 60, _segmentStart[0], _segmentEnd[_segmentTotal-1]);
+//  unsigned long currentMillis = millis();   //save state
+//  if((unsigned long)(currentMillis - _previousMillis) >=  _showTimeUpdateInterval) {
+//    DateTime MyDateAndTime;
+//    MyDateAndTime = RTC.read();
+//    
+//    int i = map(MyDateAndTime.Hour, 0, 12, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
+//    int j = map(MyDateAndTime.Minute, 0, 60, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
+//    int k = map(MyDateAndTime.Second, 0, 60, ledSegment[_segmentTotal-1].last, ledSegment[0].first );
+//    leds[i] = -leds[i];                     //invert
+//    leds[j] = -leds[j];                     //invert
+//    leds[k] = -leds[k];                     //invert
+//    leds[i] += CRGB( 20, 0, 0);             //add a little red
+//    leds[j] += CRGB( 0, 20, 0);             //add a little green
+//    leds[k] += CRGB( 0, 0, 20);             //add a little blue
+//
+//    #ifdef DEBUG
+//      Serial.print(MyDateAndTime.Hour);
+//      Serial.print(":");
+//      Serial.print(MyDateAndTime.Minute);
+//      Serial.print(".");
+//      Serial.print(MyDateAndTime.Second);
+//      Serial.print(" - ");
+//      Serial.print(MyDateAndTime.Minute);
+//      Serial.print("/");
+//      Serial.print(MyDateAndTime.Day);
+//      Serial.print("/");
+//      Serial.print(MyDateAndTime.Month);
+//      Serial.print("/");
+//      Serial.print(MyDateAndTime.Year);
+//      Serial.println(" ");
+//    #endif
+//    
+//    _previousMillis = currentMillis;        //save state for next time around
+//  }
+//}
+//
 

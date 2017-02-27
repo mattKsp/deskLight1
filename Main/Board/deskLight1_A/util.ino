@@ -1,16 +1,16 @@
 /*----------------------------util----------------------------*/
 
-/*
-  DS3231 - 'kick the interrupt'
-  TEMP - just to make sure interrupt output pin SQW gets turned on
-  enables interrupt pin, alarm 2 and alarm
- */
-void DS3231kickInterrupt() {
-  Wire.beginTransmission(DS3231_I2C_ADDRESS);
-  Wire.write(0x0E);                         //control location
-  Wire.write(B00000111);                    //..this!
-  Wire.endTransmission();
-}
+///*
+//  DS3231 - 'kick the interrupt'
+//  TEMP - just to make sure interrupt output pin SQW gets turned on
+//  enables interrupt pin, alarm 2 and alarm
+// */
+//void DS3231kickInterrupt() {
+//  Wire.beginTransmission(DS3231_I2C_ADDRESS);
+//  Wire.write(0x0E);                         //control location
+//  Wire.write(B00000111);                    //..this!
+//  Wire.endTransmission();
+//}
 
 /*
  * Mode utils
