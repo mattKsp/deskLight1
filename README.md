@@ -10,20 +10,20 @@ Repository is an Arduino project
   * ATmega328
   * 16 MHz clock speed
   * 1K EEPROM
-- DS3231 RTC (realtime clock) with AT24C32 memory backpack
-  * 5v
-  * I2C
+- ~~DS3231 RTC (realtime clock) with AT24C32 memory backpack~~
+  * ~~5v~~
+  * ~~I2C~~
 - WS2812B addressable LED strips
   * pixel order = GRB
 
 #### Software
 - Arduino 
-- EEPROM libary
+- ~~EEPROM libary~~
 - Bounce library
 - CapacitiveSensor library  https://github.com/PaulStoffregen/CapacitiveSensor
-- DS3231_Simple library  https://github.com/sleemanj/DS3231_Simple
-  * DS3231 I2C address = 0x68
-  * AT24C32 I2C address = 0x57
+- ~~DS3231_Simple library  https://github.com/sleemanj/DS3231_Simple~~
+  * ~~DS3231 I2C address = 0x68~~
+  * ~~AT24C32 I2C address = 0x57~~
 - FastLED library  https://github.com/FastLED/FastLED
 
 ### Licence
