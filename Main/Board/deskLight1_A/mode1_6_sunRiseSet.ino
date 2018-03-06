@@ -30,35 +30,6 @@ void mode6() {
 } //END mode6
 
 
-/*----------------------------set----------------------------*/
-
-//void setSunRise(uint8_t hour, uint8_t mins) {
-//  //mode 0 = natural (set rise to realtime) - Not used yet!
-//  //mode 1 = set time aswell (mabye link to alarm array entry)
-//  RTC.disableAlarms();                                                          //hmm.. power cuts? ..and how to specify 1 or both? write my own?
-//  DateTime MyTimestamp;
-//  MyTimestamp = RTC.read();                                                       //get an initialized timestamp to use
-//  MyTimestamp.Hour = hour;
-//  MyTimestamp.Minute = mins;
-//  MyTimestamp.Second = 0;
-//  
-//  //RTC.setAlarm(DS3231_Simple::ALARM_EVERY_MINUTE); 
-//  //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_MINUTE);
-//  RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_DAILY);                          //sun rise - Alarm 2 - ALARM_DAILY (on the hour and minute)
-//  
-//    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_EVERY_SECOND); 
-//    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND); 
-//    //RTC.setAlarm(MyTimestamp, DS3231_Simple::ALARM_MATCH_SECOND_MINUTE_HOUR);       //sun set - Alarm 1 - ALARM_MATCH_SECOND_MINUTE_HOUR
-//  
-//  #ifdef DEBUG
-//    Serial.println();
-//    Serial.print(F("void setSunRiseSet (rise/Alarm2) "));
-//    Serial.print(hour);
-//    Serial.print(":"); 
-//    Serial.print(mins);
-//    Serial.println();
-//  #endif
-//}
 
 /*----------------------------do----------------------------*/
 /*

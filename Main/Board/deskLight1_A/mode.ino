@@ -40,7 +40,7 @@ void loopModes() {
   } 
   else { 
     //fadeToBlackBy( leds, _ledNum, 30); 
-    fill_solid( leds, _ledNum, CRGB::Black);  //TEMP colour
+    fill_solid( leds, _ledNum, CRGB::Black);  //TEMP colour ..this should be a number, not a colour!!!
   } //turn off - fade everything to black
 }
 
