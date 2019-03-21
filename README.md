@@ -5,7 +5,7 @@ Repository is an Arduino project
 
 ### Equipment
 #### Hardware
-- ~~Arduino Mini Pro board - 5v, ATmega328, 16 MHz, 1K EEPROM
+- ~~Arduino Mini Pro board - 5v, ATmega328, 16 MHz, 1K EEPROM~~
 - WeMos D1 (R2 &) mini
   * 80 MHz 
   * 115200 baud 
