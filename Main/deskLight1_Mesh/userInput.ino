@@ -1,15 +1,16 @@
 /*----------------------------user input----------------------------*/
 
 void setupUserInputs() {
-  
-//  //button0 - on/off
-//  pinMode(_button0Pin, INPUT_PULLUP);         // Setup the button with an internal pull-up :
-//  _button0.attach(_button0Pin);               // After setting up the button, setup the Bounce instance :
-//  _button0.interval(_buttonDebounceTime);
-//  //button1 - mode
-//  pinMode(_button1Pin, INPUT_PULLUP);         // Setup the button with an internal pull-up :
-//  _button1.attach(_button1Pin);               // After setting up the button, setup the Bounce instance :
-//  _button1.interval(_buttonDebounceTime);
+  s32 ret = 0;                                  // s32 = int
+  if(mpr121.begin() < 0)
+  {
+    if (DEBUG) { Serial.println("Can't detect device!!!!"); }
+  }
+  else
+  {
+    if (DEBUG) { Serial.println("mpr121 init OK!"); }
+  }
+  delay(100);
 }
 
 /*
@@ -17,77 +18,93 @@ void setupUserInputs() {
  * called from main loop
  */
 void loopUserInputs() {
-//  button0();
-//  button1();
+  touchSensorsMPR121();
 }
 
-/*----------------------------buttons----------------------------*/
-//void button0() {
-//  //on/off
-//  boolean hasChanged0 = _button0.update();    // Bounce buttons keep internal track of whether any change has occured since last time
-//  
-//  if(hasChanged0) {
-//    //_button[0].update();                      // Update the LED button Bounce instance again  ???
-//      //do button stuff
-//      if(_button0.fell()) {
-//        _onOff = !_onOff;
-////        if(_onOff == false) {
-////          _onOff = true;  //if the lights are already off, then turn them on
-////          //don't need to change mode, as we are already in a mode, just switched on
-////        } else {
-////          //_modeCur +=1;
-////          //if(_modeCur >= _modeNum){ _modeCur = 0; }  //TEMP rollover catch
-////    
-////          _modePresetSlotCur +=1;
-////          if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
-////          _modeCur = _modePreset[_modePresetSlotCur];
-////          //write cur mode to memory ???
-////        } //END onOff
-//        if (DEBUG) {
-//          Serial.print(F("button 0 - fell,  onOff = "));
-//          Serial.print(_onOff);
-//          Serial.println();
-//        }
-//      } //END fell
-//      if(_button0.rose()) {
-//        //write cur mode to memory ???
-//      } //END rose
-//    
-//  } //END hasChanged0
-//  
-//} //END button0
-//
-//void button1() {
-//  //modes
-//  boolean hasChanged1 = _button1.update();    // Bounce buttons keep internal track of whether any change has occured since last time
-//  
-//  if(hasChanged1) {
-//    //_button[0].update();                      // Update the LED button Bounce instance again  ???
-//      //do button stuff
-//      if(_button1.fell()) {
-//        if(_onOff == false) {
-//          _onOff = true;  //if the lights are already off, then turn them on
-//          //don't need to change mode, as we are already in a mode, just switched on
-//        } else {
-//          //_modeCur +=1;
-//          //if(_modeCur >= _modeNum){ _modeCur = 0; }  // TEMP rollover catch
-//    
-//          _modePresetSlotCur +=1;
-//          if(_modePresetSlotCur >= _modePresetSlotNum){ _modePresetSlotCur = 0; }  //TEMP rollover catch
-//          _modeCur = _modePreset[_modePresetSlotCur];
-//          //write cur mode to memory ???
-//        } //END onOff
-//        if (DEBUG) {
-//          Serial.print(F("button 1 - fell,  modeCur = "));
-//          Serial.print(_modeCur);
-//          Serial.println();
-//        }
-//      } //END fell
-//      if(_button1.rose()) {
-//        //write cur mode to memory ???
-//      } //END rose
-//    
-//  } //END hasChanged1
-//  
-//} //END button1
+/*---------------touch sensors MPR121--------------*/
+void touchSensorsMPR121() {
+  u16 result = 0;                               // u16 = unsigned short
+  u16 filtered_data_buf[CHANNEL_NUM] = { 0 };
+  u8 baseline_buf[CHANNEL_NUM] = { 0 };         // u8 = unsigned char
+  
+  result = mpr121.check_status_register();
+
+  mpr121.get_filtered_reg_data(&result, filtered_data_buf);
+
+  for(int i = 0; i < CHANNEL_NUM; i++)
+  {
+    if(result&(1<<i))                             /*key i is pressed!!*/
+    {
+      if(0 == touch_status_flag[i])             
+      { 
+        touch_status_flag[i] = 1;
+
+        if (i == 0) {
+          touch0pressed();
+        } else if (i == 1) {
+          touch1pressed();
+        } else if (i == 2) {
+          touch2pressed();
+        } else if (i == 3) {
+          touch3pressed();
+        } else if (i == 4) {
+          touch4pressed();
+        }
+        
+        if (DEBUG) { 
+          Serial.print("key ");
+          Serial.print(i);
+          Serial.println("pressed");
+        }
+      }
+    }
+    else
+    {
+      if(1 == touch_status_flag[i])
+      {
+        touch_status_flag[i] = 0;
+
+        if (DEBUG) { 
+          Serial.print("key ");
+          Serial.print(i);
+          Serial.println("release");
+        }
+      }
+    }
+  }
+  //delay(50);                                  // ???
+}
+
+/*---------------touch sensors MPR121 - pressed--------------*/
+void touch0pressed() {                          // touch sensor 0 - on/off
+  _onOff = !_onOff;                             // flip the lights
+}
+void touch1pressed() {                          // touch sensor 1 - mode up
+  if(_onOff == false) {
+    _onOff = true;  //if the lights are already off, then turn them on
+    //don't need to change mode, as we are already in a mode, just switched on
+  } else {
+    incrementPresetSlot();
+  }
+}
+void touch2pressed() {                          // touch sensor 2 - mode down
+  if(_onOff == false) {
+    _onOff = true;  //if the lights are already off, then turn them on
+    //don't need to change mode, as we are already in a mode, just switched on
+  } else {
+    decrementPresetSlot();
+  }
+}
+void touch3pressed() {                          // touch sensor 3 - sub-mode cycle
+  // sub-modes eg. cycle temperature modes (not implemented yet)
+}
+void touch4pressed() {                          // touch sensor 4 - brightness up
+  //increaseBrightness();
+}
+void touch5pressed() {                          // touch sensor 5 - brightness down
+  //decreaseBrightness();
+}
+
+/*---------------touch sensors MPR121 - released--------------*/
+
 

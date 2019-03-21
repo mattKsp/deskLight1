@@ -23,14 +23,13 @@
 #include <EEPROM.h>                           // a few saved settings
 //#include <Bounce2.h>                          // buttons with de-bounce
 #include <FastLED.h>                          // WS2812B LED strip control and effects
-//#include <Wire.h>                             // include, but do not need to initialise - for DS3231 & CAP1296
 #include "Seeed_MPR121_driver.h"              // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
 #include "painlessMesh.h"
 #include <MT_LightControlDefines.h>
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.28";              // moved to ESP8266 mesh network
+const String _progVers = "0.29";              // swapped user input to touch
 #define DEBUG 1                               // 0 or 1
 boolean _debugOverlay = false;                // show debug overlay (eg. show segment endpoints)
 boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
@@ -40,7 +39,6 @@ bool runonce = true; // flag for sending states when first mesh conection
 //const int _mainLoopDelay = 0;                 // just in case  - using FastLED.delay instead..
 
 /*----------------------------pins----------------------------*/
-//const int _ledPin = 13;                       // built-in LED
 const int _ledDOutPin = 14;                   // DOut 0 -> LED strip 0 DIn
 //const int _i2cSDApin = 4;                     // SDA (D2)
 //const int _i2cSCLpin = 5;                     // SCL (D1)
@@ -52,13 +50,6 @@ int _modePreset[_modePresetSlotNum] = { 0, 2, 3, 4, 5, 7, 8 }; // test basic, ta
 volatile int _modeCur = 0;                    // current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
 int _modePresetSlotCur = 0;                   // the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 String modeName[_modeNum] = { "Glow", "Sunrise", "Morning", "Day", "Working", "Evening", "Sunset", "Night", "Effect" };
-
-/*----------------------------buttons----------------------------*/
-//const unsigned long _buttonDebounceTime = 5;  // unsigned long (5ms)
-//Bounce _button0 = Bounce();                   // Instantiate a Bounce object
-//Bounce _button1 = Bounce();                   // Instantiate a Bounce object
-//boolean _button0Toggled = false;
-//boolean _button1Toggled = false;
 
 /*----------------------------touch sensors----------------------------*/
 Mpr121 mpr121;                                // init MPR121 on I2C
@@ -182,26 +173,4 @@ void loop() {
   //
   //delay(_mainLoopDelay);                      // using FastLED.delay instead..
 }
-
-
-/*----------------------------Serial----------------------------*/
-/*
-  SerialEvent occurs whenever a new data comes in the
- hardware serial RX.  This routine is run between each
- time loop() runs, so using delay inside loop can delay
- response.  Multiple bytes of data may be available.
- */
-//#ifdef DEBUG
-//void serialEvent() {
-//  while (Serial.available()) {
-//    char inChar = (char)Serial.read();        // get the new byte:
-//    _inputString += inChar;                   // add it to the inputString:
-//    // if the incoming character is a newline, set a flag
-//    // so the main loop can do something about it:
-//    if (inChar == '\n') {
-//      stringComplete = true;
-//    }
-//  }
-//}
-//#endif
 
