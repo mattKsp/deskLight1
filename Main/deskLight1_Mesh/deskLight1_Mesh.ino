@@ -29,7 +29,7 @@
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_A";
-const String _progVers = "0.29";              // swapped user input to touch
+const String _progVers = "0.30";              // added blank led for voltage shift hack and breath
 #define DEBUG 1                               // 0 or 1
 boolean _debugOverlay = false;                // show debug overlay (eg. show segment endpoints)
 boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
@@ -62,22 +62,25 @@ typedef struct {
   byte last;
   byte total;
 } LED_SEGMENT;
-const int _ledNum = 150;                      // 5m strip with 150 LEDs
-const int _segmentTotal = 4;                  // more later..
+const int _ledNum = 151;                      // 5m strip with 150 + 1 LEDs
+const int _segmentTotal = 5;                  // Xm strip with LEDs (4 + 1)
 const int _ledGlobalBrightness = 255;         // global brightness
 int _ledGlobalBrightnessCur = 255;            // current global brightness - adjust this
 int _ledBrightnessIncDecAmount = 10;          // the brightness amount to increase or decrease
 #define UPDATES_PER_SECOND 120                // main loop FastLED show delay  //100
 LED_SEGMENT ledSegment[_segmentTotal] = { 
-  { 0, 11, 12 }, 
-  { 12, 46, 35 }, 
-  { 47, 59, 12 },
-  { 60, 94, 34 }
+  { 0, 0, 1 },
+  { 1, 12, 12 }, 
+  { 13, 47, 35 }, 
+  { 48, 60, 12 },
+  { 61, 95, 34 }
 };                     
 CHSV startColor( 144, 70, 64 );
 CHSV endColor( 31, 71, 69 );
 CRGB startColor_RGB( 3, 144, 232 );
 CRGB endColor_RGB( 249, 180, 1 );
+
+const uint16_t _1totalDiv = (ledSegment[1].total / 4); //used in 'mode/void breathRiseFall'
 
 CRGB leds[_ledNum];                           // global RGB array
 int _ledState = LOW;                          // use to toggle LOW/HIGH (ledState = !ledState)
