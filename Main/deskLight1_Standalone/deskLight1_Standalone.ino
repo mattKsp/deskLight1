@@ -1,6 +1,6 @@
 /*
-    'deskLight1_A' by Thurstan. LED strip desk light.
-    Copyright (C) 2016  MTS Standish (Thurstan|mattKsp)
+    'deskLight1_Standalone' by Thurstan. LED strip desk light.
+    Copyright (C) 2019  MTS Standish (mattThurstan)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 */
 //#define DEBUG 1                           //comment/un-comment
 #ifdef DEBUG     
+//some vars
 #endif
 const int _button0Pin = 2;                //#define BUTTON_0_PIN 2 _button0Pin
 const int _button1Pin = 3;                //#define BUTTON_1_PIN 2 _button1Pin
