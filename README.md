@@ -10,9 +10,7 @@ Repository is an Arduino project
   * 80 MHz 
   * 115200 baud 
   * 4M (3M SPIFFS)
-- ~~DS3231 RTC (realtime clock) with AT24C32 memory backpack~~
-  * ~~5v~~
-  * ~~I2C~~
+- ~~DS3231 RTC (realtime clock) with AT24C32 memory backpack - 5v, I2C~~
 - WS2812B addressable LED strips
   * pixel order = GRB
 - 12 Key Capacitive I2C Touch Sensor V2 (MPR121)
