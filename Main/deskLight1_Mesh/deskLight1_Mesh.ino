@@ -21,17 +21,21 @@
 
 /*----------------------------libraries----------------------------*/
 #include <EEPROM.h>                           // a few saved settings
-//#include <Bounce2.h>                          // buttons with de-bounce
 #include <FastLED.h>                          // WS2812B LED strip control and effects
 #include "Seeed_MPR121_driver.h"              // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
 #include "painlessMesh.h"
 #include <MT_LightControlDefines.h>
 
 /*----------------------------system----------------------------*/
-const String _progName = "deskLight1_A";
-const String _progVers = "0.30";              // added blank led for voltage shift hack and breath
-#define DEBUG 1                               // 0 or 1
-boolean _debugOverlay = false;                // show debug overlay (eg. show segment endpoints)
+const String _progName = "deskLight1_Mesh";
+const String _progVers = "0.31";              // cleanup, mostly messages, input and debug
+
+boolean DEBUG_GEN = false;                    // realtime serial debugging output - general
+boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
+boolean DEBUG_MESHSYNC = false;               // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
+boolean DEBUG_COMMS = false;                  // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = false;              // realtime serial debugging output - user input
+
 boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;              // this should init false, then get activated by input - on/off true/false
 bool shouldSaveSettings = false; // flag for saving data
@@ -50,6 +54,9 @@ int _modePreset[_modePresetSlotNum] = { 0, 2, 3, 4, 5, 7, 8 }; // test basic, ta
 volatile int _modeCur = 0;                    // current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
 int _modePresetSlotCur = 0;                   // the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 String modeName[_modeNum] = { "Glow", "Sunrise", "Morning", "Day", "Working", "Evening", "Sunset", "Night", "Effect" };
+//const int _subModeNum = 3;
+//int _subModeCur = 1;                          // color temperature sub-modes for the main "Working" mode.
+//String subModeName[_subModeNum] = { "Warm", "Standard", "CoolWhite" }; // color temperature sub-mode names for the main "Working" mode.
 
 /*----------------------------touch sensors----------------------------*/
 Mpr121 mpr121;                                // init MPR121 on I2C
@@ -80,22 +87,32 @@ CHSV endColor( 31, 71, 69 );
 CRGB startColor_RGB( 3, 144, 232 );
 CRGB endColor_RGB( 249, 180, 1 );
 
-const uint16_t _1totalDiv = (ledSegment[1].total / 4); //used in 'mode/void breathRiseFall'
-
 CRGB leds[_ledNum];                           // global RGB array
 int _ledState = LOW;                          // use to toggle LOW/HIGH (ledState = !ledState)
+
 #define TEMPERATURE_0 WarmFluorescent
 #define TEMPERATURE_1 StandardFluorescent
 #define TEMPERATURE_2 CoolWhiteFluorescent
-int _colorTempCur = 5;                        // current colour temperature
+const int _colorTempNum = 3;                  // 3 for now
+int _colorTempCur = 1;                        // current colour temperature
+String colorTempName[_colorTempNum] = { "Warm", "Standard", "CoolWhite" }; // color temperature sub-mode names for the main "Working" mode.
 
 /*----------------------------Mesh----------------------------*/
 painlessMesh  mesh;
 String _modeString = "Glow";
 uint32_t id = DEVICE_ID_BRIDGE1;
 
+bool calc_delay = false;
+SimpleList<uint32_t> nodes;
+
+Scheduler userScheduler;
+Task blinkNoNodes;
+bool onFlag = false;                          // task to blink the number of active nodes
+#define   BLINK_PERIOD    3000 // milliseconds until cycle repeat
+#define   BLINK_DURATION  100  // milliseconds LED is on for
+
 void receivedCallback(uint32_t from, String &msg ) {
-  if (DEBUG) { Serial.printf("deskLight1_Mesh: Received from %u msg=%s\n", from, msg.c_str()); }
+  if (DEBUG_GEN) { Serial.printf("deskLight1_Mesh: Received from %u msg=%s\n", from, msg.c_str()); }
   receiveMessage(from, msg);
 }
 
@@ -107,19 +124,47 @@ void newConnectionCallback(uint32_t nodeId) {
     //publishMode(false);
     runonce = false;
   }
-  if (DEBUG) { Serial.printf("--> deskLight1_Mesh: New Connection, nodeId = %u\n", nodeId); }
+
+  if (DEBUG_MESHSYNC) {
+    // Reset blink task
+    onFlag = false;
+    blinkNoNodes.setIterations((mesh.getNodeList().size() + 1) * 2);
+    blinkNoNodes.enableDelayed(BLINK_PERIOD - (mesh.getNodeTime() % (BLINK_PERIOD*1000))/1000);
+  }
+  
+  if (DEBUG_COMMS) { Serial.printf("--> deskLight1_Mesh: New Connection, nodeId = %u\n", nodeId); }
 }
 
 void changedConnectionCallback() {
-  if (DEBUG) { Serial.printf("Changed connections %s\n",mesh.subConnectionJson().c_str()); }
+  if (DEBUG_COMMS) { Serial.printf("Changed connections %s\n",mesh.subConnectionJson().c_str()); }
+
+  if (DEBUG_MESHSYNC) {
+    // Reset blink task
+    onFlag = false;
+    blinkNoNodes.setIterations((mesh.getNodeList().size() + 1) * 2);
+    blinkNoNodes.enableDelayed(BLINK_PERIOD - (mesh.getNodeTime() % (BLINK_PERIOD*1000))/1000);
+   
+    nodes = mesh.getNodeList();
+  
+    Serial.printf("Num nodes: %d\n", nodes.size());
+    Serial.printf("Connection list:");
+  
+    SimpleList<uint32_t>::iterator node = nodes.begin();
+    while (node != nodes.end()) {
+      Serial.printf(" %u", *node);
+      node++;
+    }
+    Serial.println();
+    calc_delay = true;
+  }
 }
 
 void nodeTimeAdjustedCallback(int32_t offset) {
-  if (DEBUG) { Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset); }
+  if (DEBUG_COMMS) { Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset); }
 }
 
 void delayReceivedCallback(uint32_t from, int32_t delay) {
-  if (DEBUG) { Serial.printf("Delay to node %u is %d us\n", from, delay); }
+  if (DEBUG_COMMS) { Serial.printf("Delay to node %u is %d us\n", from, delay); }
 }
 
 
@@ -128,7 +173,7 @@ void setup() {
   
   Serial.begin(115200);
   
-  if (DEBUG) {
+  //if (DEBUG_GEN) {
     Serial.println();
     Serial.print(_progName);
     Serial.print(" v");
@@ -136,14 +181,14 @@ void setup() {
     Serial.println();
     Serial.print("..");
     Serial.println();
-  }
+  //}
   
   delay(3000);                                // give the power, LED strip, etc. a couple of secs to stabilise
   setupLEDs();
   setupUserInputs();
   setupMesh();
   
-  if (DEBUG) {
+  //if (DEBUG_GEN) {
   //everything done? ok then..
     Serial.print(F("Setup done"));
     Serial.println("-----");
@@ -152,23 +197,30 @@ void setup() {
     Serial.println(s);
     Serial.println("-----");
     Serial.println("");
-  }
+  //}
 }
 
 void loop() {
   
   if(_firstTimeSetupDone == false) {
-    if (DEBUG) { }
+    if (DEBUG_GEN) { }
     _firstTimeSetupDone = true;               // need this for stuff like setting sunrise, cos it needs the time to have been set
   }
 
   mesh.update();
+  userScheduler.execute();
+  
   loopUserInputs();
   loopModes();
   
-  if (_debugOverlay) {
+  if (DEBUG_OVERLAY) {
     checkSegmentEndpoints();
     //showColorTempPx();
+  }
+  
+  if (DEBUG_MESHSYNC) {
+    if (onFlag) { leds[1] = CRGB::Black; } 
+    else { leds[1] = CRGB::Red; }
   }
   
   FastLED.show();                             // send all the data to the strips

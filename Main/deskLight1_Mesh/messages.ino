@@ -1,4 +1,7 @@
-/*----------------------------internal mesh messages - get passed to/from MQTT broker by bridge----------------------------*/
+/*----------------------------internal mesh messages----------------------------*/
+/*---------------------get passed to/from MQTT broker by bridge-----------------*/
+
+/*----------------------------messages - receive----------------------------*/
 void receiveMessage(uint32_t from, String msg)
 {
   uint8_t firstMsgIndex = msg.indexOf(':');
@@ -6,7 +9,7 @@ void receiveMessage(uint32_t from, String msg)
   String msgSub = msg.substring(firstMsgIndex+1);
 
 /*
-  _debugOverlay = checkBool(_integer1FromSerial);
+  DEBUG_OVERLAY = checkBool(_integer1FromSerial);
   setSunRise(_integer1FromSerial, _integer2FromSerial);             //???
   _sunRiseEnabled = true;
   //setSunSet(_integer1FromSerial, _integer2FromSerial);             //???
@@ -29,7 +32,7 @@ void receiveMessage(uint32_t from, String msg)
       _onOff = false;
     }
     publishState(true);
-    if (DEBUG) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   } 
   else if (targetSub == "lights/brightness/set")
   {
@@ -41,27 +44,33 @@ void receiveMessage(uint32_t from, String msg)
       setGlobalBrightness(brightness);
       publishBrightness(true);
     }
-    if (DEBUG) { Serial.print(targetSub); Serial.println(brightness); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(brightness); }
   }
   else if (targetSub == "lights/mode")
   {
     
     if (msgSub == "Glow") 
-    { _modeCur = 0; }
+    { _modeCur = 0;
+      _modePresetSlotCur = 0; }       // TEMP way of doing it.. until user preset slot changing is implemented.
     //else if (msgSub == "Sunrise") 
     //{ _modeCur = 1; }
     else if (msgSub == "Morning") 
-    { _modeCur = 2; }
+    { _modeCur = 2;
+      _modePresetSlotCur = 1; }
     else if (msgSub == "Day") 
-    { _modeCur = 3; }
+    { _modeCur = 3;
+      _modePresetSlotCur = 2; }
     else if (msgSub == "Working") 
-    { _modeCur = 4; }
+    { _modeCur = 4;
+      _modePresetSlotCur = 3; }
     else if (msgSub == "Evening") 
-    { _modeCur = 5; }
+    { _modeCur = 5;
+      _modePresetSlotCur = 4; }
     //else if (msgSub == "Sunset") 
     //{ _modeCur = 6; }
     else if (msgSub == "Night") 
-    { _modeCur = 7; }
+    { _modeCur = 7;
+      _modePresetSlotCur = 5; }
     else if (msgSub == "Effect") 
     { _modeCur = 8; }
     else { }
@@ -77,19 +86,24 @@ void receiveMessage(uint32_t from, String msg)
     //}
     
     publishMode(true);
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/mode/coltemp")
   {
-    // 
-    publishColTemp(true);
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (msgSub == "Warm") 
+    { setColorTemp(0); }
+    else if (msgSub == "Standard") 
+    { setColorTemp(1); }
+    else if (msgSub == "CoolWhite") 
+    { setColorTemp(2); }
+    publishColorTemp(true);
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/mode/effect")
   {
     // 
-    publishEffect(true);
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    //publishEffect(true);
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "sunrise")
   {
@@ -100,7 +114,7 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == LIGHTS_OFF) {
       //stop sunrise and revert to previous setting
     }
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/sunrise") {
     // trigger only
@@ -115,7 +129,7 @@ void receiveMessage(uint32_t from, String msg)
     //else if (msgSub == "receive a time for sunrise to happen at") {
     //set sunrise time
     //}
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "sunset")
   {
@@ -126,7 +140,7 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == LIGHTS_OFF) {
       //stop sunset and revert to previous setting
     }
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/sunset") {
     // trigger only
@@ -140,7 +154,7 @@ void receiveMessage(uint32_t from, String msg)
     //else if (msgSub == "receive a time for sunset to happen at") {
     //set sunset time
     //}
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   /*
    * Breath : (noun) Refers to a full cycle of breathing. It can also refer to the air that is inhaled or exhaled.
@@ -155,26 +169,50 @@ void receiveMessage(uint32_t from, String msg)
       
       //publishMode(true);
     }
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/breath/xyz")
   {
     // msg will contain xyz coords for origin position within the house
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/breath/xyz/mode")
   {
     // set positional mode
     // independent, global
-    if (DEBUG) { Serial.print(targetSub); Serial.println(msgSub); }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+  }
+  else if(targetSub == "debug/general") 
+  {
+    if(msg == "ON") { DEBUG_GEN = true; } 
+    else if(msg == "OFF") { DEBUG_GEN = false; }
+  }
+  else if (targetSub == "debug/overlay")
+  {
+    if (msgSub == LIGHTS_ON) { DEBUG_OVERLAY = true; }
+    else if (msgSub == LIGHTS_OFF) { DEBUG_OVERLAY = false; }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+  }
+  else if (targetSub == "debug/meshsync")
+  {
+    if (msgSub == LIGHTS_ON) { DEBUG_MESHSYNC = true; }
+    else if (msgSub == LIGHTS_OFF) { DEBUG_MESHSYNC = false; }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+  }
+  else if(targetSub == "debug/comms") 
+  {
+    if(msg == "ON") { DEBUG_COMMS = true; } 
+    else if(msg == "OFF") { DEBUG_COMMS = false; }
+    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
   }
   
 }
 
 
+/*----------------------------messages - publish----------------------------*/
 void publishState(bool save)
 {
-  if (DEBUG) { Serial.print("publishState "); }
+  if (DEBUG_COMMS) { Serial.print("publishState "); }
   String msg = "lights/light/status";
   msg += ":"; //..just so we are all sure what is going on here !?
   if(_onOff == false) {
@@ -184,51 +222,53 @@ void publishState(bool save)
   }
   mesh.sendSingle(id, msg);
   //mesh.sendBroadcast(msg);
-  if (DEBUG) { Serial.println(msg); }
+  if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
 
 void publishBrightness(bool save)
 {
-  if (DEBUG) { Serial.print("publishBrightness "); }
+  if (DEBUG_COMMS) { Serial.print("publishBrightness "); }
   String msg = "lights/brightness/status";
   msg += ":"; //..just so we are all sure what is going on here !?
   msg += String(_ledGlobalBrightnessCur);
   mesh.sendSingle(id, msg);
-  if (DEBUG) { Serial.println(msg); }
+  if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
 
 void publishMode(bool save)
 {
-  if (DEBUG) { Serial.print("publishMode "); }
+  if (DEBUG_COMMS) { Serial.print("publishMode "); }
   String msg = "lights/mode";
   msg += ":"; //..just so we are all sure what is going on here !?
   msg += modeName[_modeCur];
   mesh.sendSingle(id, msg);
-  if (DEBUG) { Serial.println(msg); }
+  if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
 
-void publishColTemp(bool save)
+void publishSubMode(bool save) { /* TODO - but might just use ColTemp */ }
+
+void publishColorTemp(bool save)
 {
-  if (DEBUG) { Serial.print("publishColTemp "); }
-  String msg = "lights/mode/coltemp";
+  if (DEBUG_COMMS) { Serial.print("publishColorTemp "); }
+  String msg = "lights/mode/coltemp";   // NOTE this needs to be 'colTemp'
   msg += ":"; //..just so we are all sure what is going on here !?
-  //msg += ;
+  msg += colorTempName[_colorTempCur];
   //mesh.sendSingle(id, msg);
-  if (DEBUG) { Serial.println(msg); }
+  if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
 
 void publishEffect(bool save)
 {
-  if (DEBUG) { Serial.print("publishEffect "); }
+  if (DEBUG_COMMS) { Serial.print("publishEffect "); }
   String msg = "lights/mode/effect";
   msg += ":"; //..just so we are all sure what is going on here !?
   //msg += ;
   //mesh.sendSingle(id, msg);
-  if (DEBUG) { Serial.println(msg); }
+  if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
 

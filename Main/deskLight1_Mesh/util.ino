@@ -19,7 +19,7 @@ void incDecPresSlot_prtB() {
 }
 
 /*
- * Golbal brightness utils
+ * Global brightness utils
  */
 void setGlobalBrightness(int gb) {
   //use this to achieve an override from the mesh, eg. to match levels
@@ -43,6 +43,18 @@ void brightnessRolloverCatch() {
 }
 
 /*
+ * Color temperature utils
+ */
+void setColorTemp(int i) {
+  _colorTempCur = i;
+}
+void cycleColorTemp() {
+  _colorTempCur += 1;
+  if (_colorTempCur >= _colorTempNum) 
+  { _colorTempCur = 0; }  // rollover
+}
+
+/*
  Check Segment Endpoints
  usage | checkSegmentEndpoints();
  overlay/place near end of chain
@@ -51,17 +63,17 @@ void brightnessRolloverCatch() {
 void checkSegmentEndpoints() {
   fill_solid( leds, _ledNum, CRGB(0,0,0));
   
-  leds[ledSegment[0].first] = CRGB(255, 0, 0);
-  leds[ledSegment[0].last] = CRGB(255, 0, 0);
+  leds[ledSegment[1].first] = CRGB(255, 0, 0);
+  leds[ledSegment[1].last] = CRGB(255, 0, 0);
   
-  leds[ledSegment[1].first] = CRGB(0, 255, 0);
-  leds[ledSegment[1].last] = CRGB(0, 255, 0);
+  leds[ledSegment[2].first] = CRGB(0, 255, 0);
+  leds[ledSegment[2].last] = CRGB(0, 255, 0);
   
-  leds[ledSegment[2].first] = CRGB(0, 0, 255);
-  leds[ledSegment[2].last] = CRGB(0, 0, 255);
+  leds[ledSegment[3].first] = CRGB(0, 0, 255);
+  leds[ledSegment[3].last] = CRGB(0, 0, 255);
   
-  leds[ledSegment[3].first] = CRGB(0, 255, 0);
-  leds[ledSegment[3].last] = CRGB(0, 255, 0);
+  leds[ledSegment[4].first] = CRGB(0, 255, 0);
+  leds[ledSegment[4].last] = CRGB(0, 255, 0);
 }
 
 /*

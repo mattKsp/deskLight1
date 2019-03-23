@@ -40,8 +40,7 @@ void loopModes() {
   } 
   else { 
     fadeToBlackBy( leds, _ledNum, 30); 
-    //fill_solid( leds, _ledNum, CRGB::Black);  // TEMP colour ..this should be a number, not a colour!!! 
-  } //turn off - fade everything to black
+  }
 }
 
 
@@ -92,7 +91,7 @@ void mode4() {
     fill_solid( leds, _ledNum, CRGB::White);  // TEMP colour
     leds[0] = CRGB::Black;                    // hack
 /*
- //sub temperature modes later..
+ //sub temperature modes later.. see util/setColTemp and cycleColTemp
   if(_mode0_sub == 0) {
     FastLED.setTemperature( TEMPERATURE_0 ); //set first temperature  //..moved to setup ..might work ???
     //fill_solid( leds, _ledNum, TEMPERATURE_0 );
