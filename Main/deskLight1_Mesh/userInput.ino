@@ -1,13 +1,15 @@
 /*----------------------------user input----------------------------*/
-
+boolean _touchActive = false;
 void setupUserInputs() {
   s32 ret = 0;                                  // s32 = int
   if(mpr121.begin() < 0)
   {
+    _touchActive = false;
     if (DEBUG_USERINPUT) { Serial.println("Can't detect MPR121 device!!!!"); }
   }
   else
   {
+    _touchActive = true;
     if (DEBUG_USERINPUT) { Serial.println("MPR121 device init OK!"); }
   }
   delay(100);
@@ -18,7 +20,9 @@ void setupUserInputs() {
  * called from main loop
  */
 void loopUserInputs() {
-  touchSensorsMPR121();
+  if (_touchActive) {
+    touchSensorsMPR121();
+  }
 }
 
 /*---------------touch sensors MPR121--------------*/

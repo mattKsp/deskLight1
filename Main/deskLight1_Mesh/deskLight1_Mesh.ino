@@ -28,13 +28,13 @@
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_Mesh";
-const String _progVers = "0.31";              // cleanup, mostly messages, input and debug
+const String _progVers = "0.311";             // tweaking
 
-boolean DEBUG_GEN = false;                    // realtime serial debugging output - general
+boolean DEBUG_GEN = true;                     // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
-boolean DEBUG_MESHSYNC = false;               // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
-boolean DEBUG_COMMS = false;                  // realtime serial debugging output - comms
-boolean DEBUG_USERINPUT = false;              // realtime serial debugging output - user input
+boolean DEBUG_MESHSYNC = true;                // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
+boolean DEBUG_COMMS = true;                   // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = true;               // realtime serial debugging output - user input
 
 boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;              // this should init false, then get activated by input - on/off true/false
@@ -102,14 +102,14 @@ painlessMesh  mesh;
 String _modeString = "Glow";
 uint32_t id = DEVICE_ID_BRIDGE1;
 
-bool calc_delay = false;
-SimpleList<uint32_t> nodes;
+//bool calc_delay = false;
+//SimpleList<uint32_t> nodes;
 
-Scheduler userScheduler;
-Task blinkNoNodes;
-bool onFlag = false;                          // task to blink the number of active nodes
-#define   BLINK_PERIOD    3000 // milliseconds until cycle repeat
-#define   BLINK_DURATION  100  // milliseconds LED is on for
+//Scheduler userScheduler;
+//Task blinkNoNodes;
+//bool onFlag = false;                          // task to blink the number of active nodes
+//#define   BLINK_PERIOD    3000 // milliseconds until cycle repeat
+//#define   BLINK_DURATION  100  // milliseconds LED is on for
 
 void receivedCallback(uint32_t from, String &msg ) {
   if (DEBUG_GEN) { Serial.printf("deskLight1_Mesh: Received from %u msg=%s\n", from, msg.c_str()); }
@@ -127,9 +127,9 @@ void newConnectionCallback(uint32_t nodeId) {
 
   if (DEBUG_MESHSYNC) {
     // Reset blink task
-    onFlag = false;
-    blinkNoNodes.setIterations((mesh.getNodeList().size() + 1) * 2);
-    blinkNoNodes.enableDelayed(BLINK_PERIOD - (mesh.getNodeTime() % (BLINK_PERIOD*1000))/1000);
+//    onFlag = false;
+//    blinkNoNodes.setIterations((mesh.getNodeList().size() + 1) * 2);
+//    blinkNoNodes.enableDelayed(BLINK_PERIOD - (mesh.getNodeTime() % (BLINK_PERIOD*1000))/1000);
   }
   
   if (DEBUG_COMMS) { Serial.printf("--> deskLight1_Mesh: New Connection, nodeId = %u\n", nodeId); }
@@ -140,22 +140,22 @@ void changedConnectionCallback() {
 
   if (DEBUG_MESHSYNC) {
     // Reset blink task
-    onFlag = false;
-    blinkNoNodes.setIterations((mesh.getNodeList().size() + 1) * 2);
-    blinkNoNodes.enableDelayed(BLINK_PERIOD - (mesh.getNodeTime() % (BLINK_PERIOD*1000))/1000);
-   
-    nodes = mesh.getNodeList();
-  
-    Serial.printf("Num nodes: %d\n", nodes.size());
-    Serial.printf("Connection list:");
-  
-    SimpleList<uint32_t>::iterator node = nodes.begin();
-    while (node != nodes.end()) {
-      Serial.printf(" %u", *node);
-      node++;
-    }
-    Serial.println();
-    calc_delay = true;
+//    onFlag = false;
+//    blinkNoNodes.setIterations((mesh.getNodeList().size() + 1) * 2);
+//    blinkNoNodes.enableDelayed(BLINK_PERIOD - (mesh.getNodeTime() % (BLINK_PERIOD*1000))/1000);
+//   
+//    nodes = mesh.getNodeList();
+//  
+//    Serial.printf("Num nodes: %d\n", nodes.size());
+//    Serial.printf("Connection list:");
+//  
+//    SimpleList<uint32_t>::iterator node = nodes.begin();
+//    while (node != nodes.end()) {
+//      Serial.printf(" %u", *node);
+//      node++;
+//    }
+//    Serial.println();
+//    calc_delay = true;
   }
 }
 
@@ -168,36 +168,42 @@ void delayReceivedCallback(uint32_t from, int32_t delay) {
 }
 
 
+/*----------------------------TEMP----------------------------*/
+//int _builtInLedState = LOW;
+//unsigned long _builtInLedPreviousMillis = 0;
+//const long _builtInLedInterval = 500;
+
 /*----------------------------MAIN----------------------------*/
 void setup() {
   
   Serial.begin(115200);
   
-  //if (DEBUG_GEN) {
-    Serial.println();
-    Serial.print(_progName);
-    Serial.print(" v");
-    Serial.print(_progVers);
-    Serial.println();
-    Serial.print("..");
-    Serial.println();
-  //}
+  Serial.println();
+  Serial.print(_progName);
+  Serial.print(" v");
+  Serial.print(_progVers);
+  Serial.println();
+  Serial.print("..");
+  Serial.println();
   
+//  pinMode(LED_BUILTIN, OUTPUT);
+//  _builtInLedState = HIGH;  // off
+//  digitalWrite(LED_BUILTIN, _builtInLedState);
+
   delay(3000);                                // give the power, LED strip, etc. a couple of secs to stabilise
   setupLEDs();
   setupUserInputs();
   setupMesh();
   
-  //if (DEBUG_GEN) {
   //everything done? ok then..
-    Serial.print(F("Setup done"));
-    Serial.println("-----");
-    Serial.print(F("Device Node ID is "));
-    String s = String(mesh.getNodeId());
-    Serial.println(s);
-    Serial.println("-----");
-    Serial.println("");
-  //}
+  Serial.print(F("Setup done"));
+  Serial.println("-----");
+  Serial.print(F("Device Node ID is "));
+  String s = String(mesh.getNodeId());
+  Serial.println(s);
+  Serial.println("-----");
+  Serial.println("");
+  
 }
 
 void loop() {
@@ -208,7 +214,7 @@ void loop() {
   }
 
   mesh.update();
-  userScheduler.execute();
+//  userScheduler.execute();
   
   loopUserInputs();
   loopModes();
@@ -219,13 +225,52 @@ void loop() {
   }
   
   if (DEBUG_MESHSYNC) {
-    if (onFlag) { leds[1] = CRGB::Black; } 
-    else { leds[1] = CRGB::Red; }
+//    if (onFlag) { leds[1] = CRGB::Black; } 
+//    else { leds[1] = CRGB::Red; }
   }
-  
+
+//  EVERY_N_SECONDS(30) {
+//    Serial.println(F("--30 seconds--"));
+//    for (SimpleList<uint32_t>::iterator itr = mesh.getNodeList().begin(); itr != mesh.getNodeList().end(); ++itr)
+//    {
+//      Serial.print(*itr);
+//      Serial.println(" : ");
+//    }
+//    Serial.println();
+
+//    Serial.print("Attached Node IDs are ");
+//    Serial.println(mesh.subConnectionJson()); //.c_str()
+
+//    nodes = mesh.getNodeList();
+//    Serial.printf("Num nodes: %d\n", nodes.size());
+//    Serial.printf("Attached Node IDs are : ");
+    
+//    SimpleList::iterator node = nodes.begin();
+//    while (node != nodes.end()) {
+//      Serial.printf(" %u", *node);
+//      node++; 
+//    }
+
+//  } // END EVERY_N_SECONDS
+
+//  unsigned long builtInLedCurrentMillis = millis();
+//  if (mesh.isConnected(mesh.getNodeId())) { //DEBUG_COMMS && 
+//    if (builtInLedCurrentMillis - _builtInLedPreviousMillis >= _builtInLedInterval) {
+//      _builtInLedPreviousMillis = builtInLedCurrentMillis;
+//      if (_builtInLedState == LOW) {
+//        _builtInLedState = HIGH;  // Note that this switches the LED *off*
+//      } else {
+//        _builtInLedState = LOW;  // Note that this switches the LED *on*
+//      }
+//      digitalWrite(LED_BUILTIN, _builtInLedState);
+//    }
+//  }
+
+      
   FastLED.show();                             // send all the data to the strips
   FastLED.delay(1000 / UPDATES_PER_SECOND);
   //
   //delay(_mainLoopDelay);                      // using FastLED.delay instead..
+  
 }
 
