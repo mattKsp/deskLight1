@@ -23,16 +23,16 @@ void receiveMessage(uint32_t from, String msg)
 
   if (targetSub == "lights/light/switch")
   {
-    if (msgSub == "ON")
+    if (msgSub == LIGHTS_ON)
     {
       _onOff = true;
     }
-    else if (msgSub == "OFF")
+    else if (msgSub == LIGHTS_OFF)
     {
       _onOff = false;
     }
     publishState(true);
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   } 
   else if (targetSub == "lights/brightness/set")
   {
@@ -44,7 +44,7 @@ void receiveMessage(uint32_t from, String msg)
       setGlobalBrightness(brightness);
       publishBrightness(true);
     }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(brightness); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(brightness); }
   }
   else if (targetSub == "lights/mode")
   {
@@ -85,8 +85,8 @@ void receiveMessage(uint32_t from, String msg)
     //  }
     //}
     
-    publishMode(true);
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //publishMode(true);  // too much bounce-back on the network
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/mode/coltemp")
   {
@@ -96,14 +96,14 @@ void receiveMessage(uint32_t from, String msg)
     { setColorTemp(1); }
     else if (msgSub == "CoolWhite") 
     { setColorTemp(2); }
-    publishColorTemp(true);
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //publishColorTemp(true);
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/mode/effect")
   {
     // 
     //publishEffect(true);
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "sunrise")
   {
@@ -114,7 +114,7 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == LIGHTS_OFF) {
       //stop sunrise and revert to previous setting
     }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/sunrise") {
     // trigger only
@@ -129,7 +129,7 @@ void receiveMessage(uint32_t from, String msg)
     //else if (msgSub == "receive a time for sunrise to happen at") {
     //set sunrise time
     //}
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "sunset")
   {
@@ -140,7 +140,7 @@ void receiveMessage(uint32_t from, String msg)
     else if (msgSub == LIGHTS_OFF) {
       //stop sunset and revert to previous setting
     }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/sunset") {
     // trigger only
@@ -154,7 +154,7 @@ void receiveMessage(uint32_t from, String msg)
     //else if (msgSub == "receive a time for sunset to happen at") {
     //set sunset time
     //}
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   /*
    * Breath : (noun) Refers to a full cycle of breathing. It can also refer to the air that is inhaled or exhaled.
@@ -169,43 +169,45 @@ void receiveMessage(uint32_t from, String msg)
       
       //publishMode(true);
     }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/breath/xyz")
   {
     // msg will contain xyz coords for origin position within the house
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/breath/xyz/mode")
   {
     // set positional mode
     // independent, global
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
-  else if(targetSub == "debug/general") 
+  else if(targetSub == "debug/general/set") 
   {
-    if(msg == "ON") { DEBUG_GEN = true; } 
-    else if(msg == "OFF") { DEBUG_GEN = false; }
+    if(msg == LIGHTS_ON) { DEBUG_GEN = true; } 
+    else if(msg == LIGHTS_OFF) { DEBUG_GEN = false; }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
-  else if (targetSub == "debug/overlay")
+  else if (targetSub == "debug/overlay/set")
   {
     if (msgSub == LIGHTS_ON) { DEBUG_OVERLAY = true; }
     else if (msgSub == LIGHTS_OFF) { DEBUG_OVERLAY = false; }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
-  else if (targetSub == "debug/meshsync")
+  else if (targetSub == "debug/meshsync/set")
   {
     if (msgSub == LIGHTS_ON) { DEBUG_MESHSYNC = true; }
     else if (msgSub == LIGHTS_OFF) { DEBUG_MESHSYNC = false; }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
-  else if(targetSub == "debug/comms") 
+  else if(targetSub == "debug/comms/set") 
   {
-    if(msg == "ON") { DEBUG_COMMS = true; } 
-    else if(msg == "OFF") { DEBUG_COMMS = false; }
-    if (DEBUG_COMMS) { Serial.print(targetSub); Serial.println(msgSub); }
+    if(msg == LIGHTS_ON) { DEBUG_COMMS = true; } 
+    else if(msg == LIGHTS_OFF) { DEBUG_COMMS = false; }
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   
+  if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
 }
 
 
@@ -272,5 +274,19 @@ void publishEffect(bool save)
   if (save == true) { shouldSaveSettings = true; }
 }
 
+void publishDebugOverlayState(bool save)
+{
+  if (DEBUG_COMMS) { Serial.print("publishDebugOverlayState "); }
+  String msg = "debug/overlay/status";
+  msg += ":"; //..just so we are all sure what is going on here !?
+  if (DEBUG_OVERLAY == false) {
+    msg += "OFF";
+  } else if (DEBUG_OVERLAY == true) {
+    msg += "ON";
+  }
+  mesh.sendSingle(id, msg);
+  if (DEBUG_COMMS) { Serial.println(msg); }
+  if (save == true) { shouldSaveSettings = true; }
+}
 
 

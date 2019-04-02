@@ -41,6 +41,10 @@ void loopModes() {
   else { 
     fadeToBlackBy( leds, _ledNum, 30); 
   }
+
+  // TEMP
+  //leds[0] = CRGB::Red;
+  //leds[0] = CRGB::Black;                    // hack
 }
 
 
@@ -89,7 +93,7 @@ void mode3() {
 void mode4() {
   //name should be working!
     fill_solid( leds, _ledNum, CRGB::White);  // TEMP colour
-    leds[0] = CRGB::Black;                    // hack
+    //leds[0] = CRGB::Black;                    // hack
 /*
  //sub temperature modes later.. see util/setColTemp and cycleColTemp
   if(_mode0_sub == 0) {
@@ -135,7 +139,7 @@ void mode4() {
 void mode5() {
   //name should be evening!
     fill_solid( leds, _ledNum, CRGB(128, 64, 64));
-    leds[0] = CRGB::Black;                    // hack
+    //leds[0] = CRGB::Black;                    // hack
 }
 
 //
@@ -155,7 +159,7 @@ void mode7() {
 void mode8() {
   //name should be changing!
     fill_solid( leds, _ledNum, CRGB(0, 0, 255));
-    leds[0] = CRGB::Black;                    // hack
+    //leds[0] = CRGB::Black;                    // hack
 }
 
 

@@ -20,7 +20,11 @@
 
 
 /*----------------------------libraries----------------------------*/
+// board running at [ 80mhz || this-> 1600mhz ]
 #include <EEPROM.h>                           // a few saved settings
+//#define FASTLED_ESP8266_D1_PIN_ORDER          // force esp8266 D1 pin mapping
+//#define FASTLED_ALLOW_INTERRUPTS 0            // fully disable interrupts while writing out led data
+#define FASTLED_INTERRUPT_RETRY_COUNT 4       // re-try attempts
 #include <FastLED.h>                          // WS2812B LED strip control and effects
 #include "Seeed_MPR121_driver.h"              // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
 #include "painlessMesh.h"
@@ -28,19 +32,20 @@
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_Mesh";
-const String _progVers = "0.311";             // tweaking
+const String _progVers = "0.312";             // mqtt modes and flickering (due to wifi interrupts and led bit-banging output style on esp8266)
 
-boolean DEBUG_GEN = true;                     // realtime serial debugging output - general
+boolean DEBUG_GEN = false;                     // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
-boolean DEBUG_MESHSYNC = true;                // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
-boolean DEBUG_COMMS = true;                   // realtime serial debugging output - comms
-boolean DEBUG_USERINPUT = true;               // realtime serial debugging output - user input
+boolean DEBUG_MESHSYNC = false;               // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
+boolean DEBUG_COMMS = false;                   // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = false;              // realtime serial debugging output - user input
 
 boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
 volatile boolean _onOff = false;              // this should init false, then get activated by input - on/off true/false
 bool shouldSaveSettings = false; // flag for saving data
 bool runonce = true; // flag for sending states when first mesh conection
 //const int _mainLoopDelay = 0;                 // just in case  - using FastLED.delay instead..
+#define UPDATES_PER_SECOND 120                // main loop FastLED show delay fps  //100
 
 /*----------------------------pins----------------------------*/
 const int _ledDOutPin = 14;                   // DOut 0 -> LED strip 0 DIn
@@ -51,12 +56,12 @@ const int _ledDOutPin = 14;                   // DOut 0 -> LED strip 0 DIn
 const int _modeNum = 9;
 const int _modePresetSlotNum = 7;
 int _modePreset[_modePresetSlotNum] = { 0, 2, 3, 4, 5, 7, 8 }; // test basic, tap bt to cycle around a few mode slots   //expand to array or struct later for more presets
-volatile int _modeCur = 0;                    // current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
-int _modePresetSlotCur = 0;                   // the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
+volatile int _modeCur = 4;                    // current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
+int _modePresetSlotCur = 3;                   // the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 String modeName[_modeNum] = { "Glow", "Sunrise", "Morning", "Day", "Working", "Evening", "Sunset", "Night", "Effect" };
-//const int _subModeNum = 3;
-//int _subModeCur = 1;                          // color temperature sub-modes for the main "Working" mode.
-//String subModeName[_subModeNum] = { "Warm", "Standard", "CoolWhite" }; // color temperature sub-mode names for the main "Working" mode.
+const int _colorTempNum = 3;                  // 3 color temperature sub-modes for now
+int _colorTempCur = 1;                        // current colour temperature
+String colorTempName[_colorTempNum] = { "Warm", "Standard", "CoolWhite" }; // color temperature sub-mode names for the main "Working" mode.
 
 /*----------------------------touch sensors----------------------------*/
 Mpr121 mpr121;                                // init MPR121 on I2C
@@ -69,18 +74,17 @@ typedef struct {
   byte last;
   byte total;
 } LED_SEGMENT;
-const int _ledNum = 151;                      // 5m strip with 150 + 1 LEDs
+const int _ledNum = 96;                      // 95 + 1 LEDs
 const int _segmentTotal = 5;                  // Xm strip with LEDs (4 + 1)
 const int _ledGlobalBrightness = 255;         // global brightness
 int _ledGlobalBrightnessCur = 255;            // current global brightness - adjust this
 int _ledBrightnessIncDecAmount = 10;          // the brightness amount to increase or decrease
-#define UPDATES_PER_SECOND 120                // main loop FastLED show delay  //100
 LED_SEGMENT ledSegment[_segmentTotal] = { 
   { 0, 0, 1 },
   { 1, 12, 12 }, 
   { 13, 47, 35 }, 
-  { 48, 60, 12 },
-  { 61, 95, 34 }
+  { 48, 60, 13 },
+  { 61, 95, 35 }
 };                     
 CHSV startColor( 144, 70, 64 );
 CHSV endColor( 31, 71, 69 );
@@ -93,9 +97,6 @@ int _ledState = LOW;                          // use to toggle LOW/HIGH (ledStat
 #define TEMPERATURE_0 WarmFluorescent
 #define TEMPERATURE_1 StandardFluorescent
 #define TEMPERATURE_2 CoolWhiteFluorescent
-const int _colorTempNum = 3;                  // 3 for now
-int _colorTempCur = 1;                        // current colour temperature
-String colorTempName[_colorTempNum] = { "Warm", "Standard", "CoolWhite" }; // color temperature sub-mode names for the main "Working" mode.
 
 /*----------------------------Mesh----------------------------*/
 painlessMesh  mesh;
@@ -121,7 +122,9 @@ void newConnectionCallback(uint32_t nodeId) {
     publishState(false);
     publishBrightness(false);
     //publishRGB(false);
-    //publishMode(false);
+    publishMode(false);
+    publishColorTemp(false);
+    publishDebugOverlayState(false);
     runonce = false;
   }
 
@@ -194,6 +197,8 @@ void setup() {
   setupLEDs();
   setupUserInputs();
   setupMesh();
+
+  //WIFI.setSleepMode(WIFI_NONE_SLEEP);
   
   //everything done? ok then..
   Serial.print(F("Setup done"));
@@ -203,7 +208,8 @@ void setup() {
   Serial.println(s);
   Serial.println("-----");
   Serial.println("");
-  
+
+  delay(1500);
 }
 
 void loop() {
@@ -220,38 +226,18 @@ void loop() {
   loopModes();
   
   if (DEBUG_OVERLAY) {
+    //FastLED.clear();
     checkSegmentEndpoints();
     //showColorTempPx();
+    leds[0] = CRGB::Red;
+  } else {
+    leds[0] = CRGB::Black;
   }
   
   if (DEBUG_MESHSYNC) {
 //    if (onFlag) { leds[1] = CRGB::Black; } 
 //    else { leds[1] = CRGB::Red; }
   }
-
-//  EVERY_N_SECONDS(30) {
-//    Serial.println(F("--30 seconds--"));
-//    for (SimpleList<uint32_t>::iterator itr = mesh.getNodeList().begin(); itr != mesh.getNodeList().end(); ++itr)
-//    {
-//      Serial.print(*itr);
-//      Serial.println(" : ");
-//    }
-//    Serial.println();
-
-//    Serial.print("Attached Node IDs are ");
-//    Serial.println(mesh.subConnectionJson()); //.c_str()
-
-//    nodes = mesh.getNodeList();
-//    Serial.printf("Num nodes: %d\n", nodes.size());
-//    Serial.printf("Attached Node IDs are : ");
-    
-//    SimpleList::iterator node = nodes.begin();
-//    while (node != nodes.end()) {
-//      Serial.printf(" %u", *node);
-//      node++; 
-//    }
-
-//  } // END EVERY_N_SECONDS
 
 //  unsigned long builtInLedCurrentMillis = millis();
 //  if (mesh.isConnected(mesh.getNodeId())) { //DEBUG_COMMS && 

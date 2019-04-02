@@ -47,10 +47,14 @@ void brightnessRolloverCatch() {
  */
 void setColorTemp(int i) {
   _colorTempCur = i;
+  colorTempCatch();
 }
 void cycleColorTemp() {
   _colorTempCur += 1;
-  if (_colorTempCur >= _colorTempNum) 
+  colorTempCatch();
+}
+void colorTempCatch() {
+  if ( (_colorTempCur >= _colorTempNum) || (_colorTempCur < 0) ) 
   { _colorTempCur = 0; }  // rollover
 }
 

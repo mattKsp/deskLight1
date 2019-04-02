@@ -10,6 +10,7 @@ void setupLEDs() {
   FastLED.setBrightness(_ledGlobalBrightness);      // set global brightness
   FastLED.setTemperature(UncorrectedTemperature);   // set first temperature
 
+  FastLED.setMaxRefreshRate(12); // WS2812B default is 400
 }
 
 void addGlitter( fract8 chanceOfGlitter) {
