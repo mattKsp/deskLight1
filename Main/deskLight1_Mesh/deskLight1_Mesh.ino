@@ -23,26 +23,29 @@
 // board running at [ this-> 80mhz || 1600mhz ]
 #include <EEPROM.h>                           // a few saved settings
 #include <FastLED.h>                          // still using 'beatsin8' for breathing
-#include <NeoPixelBus.h>
+#include <NeoPixelBrightnessBus.h>            // NeoPixelBrightnessBus (just for ESP8266)- for brightness functions (instead of NeoPixelBus.h)
 #include "Seeed_MPR121_driver.h"              // Grove - 12 Key Capacitive I2C Touch Sensor V2 (MPR121) - using edited version
 #include "painlessMesh.h"
 #include <MT_LightControlDefines.h>
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_Mesh";
-const String _progVers = "0.4";               // replacing FastLED with NeoPixelBus (just for ESP8266)
+const String _progVers = "0.420";             // tweaks and breathing
 
-boolean DEBUG_GEN = true;                     // realtime serial debugging output - general
+boolean DEBUG_GEN = false;                    // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
 boolean DEBUG_MESHSYNC = false;               // show painless mesh sync by flashing some leds (no = count of active mesh nodes) 
-boolean DEBUG_COMMS = true;                   // realtime serial debugging output - comms
-boolean DEBUG_USERINPUT = true;               // realtime serial debugging output - user input
+boolean DEBUG_COMMS = false;                  // realtime serial debugging output - comms
+boolean DEBUG_USERINPUT = false;              // realtime serial debugging output - user input
 
 boolean _firstTimeSetupDone = false;          // starts false //this is mainly to catch an interrupt trigger that happens during setup, but is usefull for other things
-volatile boolean _onOff = true;              // this should init false, then get activated by input - on/off true/false
-bool shouldSaveSettings = false; // flag for saving data
-bool runonce = true; // flag for sending states when first mesh conection
+volatile boolean _onOff = true; // issues with mqtt and init false // this should init false, then get activated by input - on/off true/false
+bool shouldSaveSettings = false;              // flag for saving data
+bool runonce = true;                          // flag for sending states when first mesh conection
 //const int _mainLoopDelay = 0;                 // just in case  - using FastLED.delay instead..
+bool _isBreathing = false;                    // toggle for breath
+bool _isBreathOverlaid = false;               // toggle for whether breath is overlaid on top of modes
+bool _isBreathingSynced = false;              // breath sync local or global
 
 /*----------------------------pins----------------------------*/
 // NeoPixelBus - For Esp8266, the Pin is omitted and it uses GPIO3(RX) due to DMA hardware use.
@@ -54,6 +57,7 @@ int _modePreset[_modePresetSlotNum] = { 0, 2, 3, 4, 5, 7, 8 }; // test basic, ta
 volatile int _modeCur = 4;                    // current mode in use - this is not the var you are looking for.. try _modePresetSlotCur
 int _modePresetSlotCur = 3;                   // the current array pos (slot) in the current preset, as opposed to..      //+/- by userInput
 String modeName[_modeNum] = { "Glow", "Sunrise", "Morning", "Day", "Working", "Evening", "Sunset", "Night", "Effect" };
+
 const int _colorTempNum = 3;                  // 3 color temperature sub-modes for now
 int _colorTempCur = 1;                        // current colour temperature
 String colorTempName[_colorTempNum] = { "Warm", "Standard", "CoolWhite" }; // color temperature sub-mode names for the main "Working" mode.
@@ -65,16 +69,17 @@ u16 touch_status_flag[CHANNEL_NUM] = { 0 };   // u16 = unsigned short
 /*----------------------------buttons----------------------------*/
 
 /*----------------------------LED----------------------------*/
+const uint16_t _ledNum = 96;                  // NeoPixelBus - 95 + 1 LEDs
+NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> strip(_ledNum);
+
 typedef struct {
   byte first;
   byte last;
   byte total;
 } LED_SEGMENT;
-const int _ledNum = 96;                       // 95 + 1 LEDs
 const int _segmentTotal = 5;                  // Xm strip with LEDs (4 + 1)
-const int _ledGlobalBrightness = 255;         // global brightness
-int _ledGlobalBrightnessCur = 255;            // current global brightness - adjust this
-int _ledBrightnessIncDecAmount = 10;          // the brightness amount to increase or decrease
+uint8_t _ledGlobalBrightnessCur = 255;        // current global brightness - adjust this
+uint8_t _ledBrightnessIncDecAmount = 10;      // the brightness amount to increase or decrease
 LED_SEGMENT ledSegment[_segmentTotal] = { 
   { 0, 0, 1 },
   { 1, 12, 12 }, 
@@ -82,19 +87,10 @@ LED_SEGMENT ledSegment[_segmentTotal] = {
   { 48, 60, 13 },
   { 61, 95, 35 }
 };
-int _ledState = LOW;                          // use to toggle LOW/HIGH (ledState = !ledState)
-
-#define TEMPERATURE_0 WarmFluorescent
-#define TEMPERATURE_1 StandardFluorescent
-#define TEMPERATURE_2 CoolWhiteFluorescent
-
-const uint16_t PixelCount = 96;               // NeoPixelBus - 95 + 1 LEDs
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
 
 uint8_t _gHue2 = 0;
 
-RgbColor _rgbStartColor( 3, 144, 232 );
-RgbColor _rgbEndColor( 249, 180, 1 );
+RgbColor _rgbClearBlueSky(64, 156, 255);      // 20000 Kelvin - ClearBlueSky = 0x409CFF - 64, 156, 255
 
 RgbColor _rgbRed(255, 0, 0);
 RgbColor _rgbGreen(0, 255, 0);
@@ -108,15 +104,34 @@ RgbColor _rgbPink(255, 105, 180);
 RgbColor _rgbWhite(255, 250, 255);
 RgbColor _rgbGlow(32, 32, 32);
 RgbColor _rgbBlack(0, 0, 0);
+RgbColor _rgbEve(128, 64, 64);
 
-//HslColor color(_gHue / 255.0f, saturationValue, lightnessValue); // 0.0 to 1.0
-HslColor _colorHSL(0.25f, 0.5f, 0.5f);
-HslColor _hslStartColor( 144, 70, 64 );
-HslColor _hslEndColor( 31, 71, 69 );
+// HSL colours for modes - "Glow", "Sunrise", "Morning", "Day", "Working", "Evening", "Sunset", "Night", "Effect"
+HslColor _hslGlowStart(_rgbGlow);
+HslColor _hslGlowEnd(_rgbBlack);
+HslColor _hslSunriseStart(_rgbYellow);
+HslColor _hslSunriseEnd(_rgbGreen);
+HslColor _hslMorningStart(_rgbYellow);
+HslColor _hslMorningEnd(_rgbBlack);
+HslColor _hslDayStart(_rgbGreen);
+HslColor _hslDayEnd(_rgbYellow);
+HslColor _hslEveningStart(_rgbEve);
+HslColor _hslEveningEnd(_rgbEve);
+HslColor _hslSunsetStart(_rgbClearBlueSky);
+HslColor _hslSunsetEnd(_rgbOrange);
+HslColor _hslNightStart(_rgbBlack);
+HslColor _hslNightEnd(_rgbGlow);
+HslColor _hslEffect0(_rgbBlack);
+
+// RGB colours for "Working" colour temperature sub-mode
+RgbColor _rgbWarmFluorescent(255, 244, 229);  // WarmFluorescent = 0xFFF4E5 - 0 K, 255, 244, 229
+RgbColor _rgbStandardFluorescent(244, 255, 250); // StandardFluorescent = 0xF4FFFA - 0 K, 244, 255, 250
+RgbColor _rgbCoolWhiteFluorescent(212, 235, 255); // CoolWhiteFluorescent = 0xD4EBFF - 0 K, 212, 235, 255
+RgbColor _rgbColorTempCur(_rgbStandardFluorescent); // use this one in day-to-day operations
 
 /*----------------------------Mesh----------------------------*/
 painlessMesh  mesh;
-String _modeString = "Day";
+String _modeString = "Working";
 uint32_t id = DEVICE_ID_BRIDGE1;
 
 void receivedCallback(uint32_t from, String &msg ) {
@@ -158,8 +173,8 @@ void delayReceivedCallback(uint32_t from, int32_t delay) {
 
 
 /*----------------------------MAIN----------------------------*/
-void setup() 
-{
+void setup() {
+  
   // Wemos D1 - GPIO 3 (RX) - swap the pin from serial to a GPIO.
   pinMode(3, FUNCTION_3); // FUNCTION_0 = swap back
   
@@ -203,10 +218,11 @@ void loop() {
   loopModes();
   
   if (DEBUG_OVERLAY) {
-    checkSegmentEndpoints();
-    strip.SetPixelColor(0, _rgbRed);
+    showSegmentEndpoints();
+    //strip.SetPixelColor(0, _rgbGreen);
+    showColorTempPx();
   } else {
-    strip.SetPixelColor(0, _rgbBlack);
+    strip.SetPixelColor(0, _rgbBlack);        // modes are responsible for all other leds
   }
   
   if (DEBUG_MESHSYNC) { }

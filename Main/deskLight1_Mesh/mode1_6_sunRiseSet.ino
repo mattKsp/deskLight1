@@ -10,9 +10,15 @@ void mode1() {
 
     //TEMP
     for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
-      strip.SetPixelColor(i, _rgbStartColor);
+      strip.SetPixelColor(i, _hslSunriseStart);
+    }
+    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
+      strip.SetPixelColor(i, _rgbBlack);
     }
     for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
+      strip.SetPixelColor(i, _hslSunriseEnd);
+    }
+    for(int i = ledSegment[4].first; i <= ledSegment[4].last; i++) {
       strip.SetPixelColor(i, _rgbBlack);
     }
     //END TEMP
@@ -21,8 +27,23 @@ void mode1() {
 
 
 void mode6() {
-  
   //name should be sunset!
+  //sunSet();
+
+  //TEMP
+  for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
+    strip.SetPixelColor(i, _hslSunsetStart);
+  }
+  for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
+    strip.SetPixelColor(i, _rgbBlack);
+  }
+  for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
+    strip.SetPixelColor(i, _hslSunsetEnd);
+  }
+  for(int i = ledSegment[4].first; i <= ledSegment[4].last; i++) {
+    strip.SetPixelColor(i, _rgbBlack);
+  }
+  //END TEMP
   
 } //END mode6
 

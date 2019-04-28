@@ -36,31 +36,32 @@ void receiveMessage(uint32_t from, String msg)
   else if (targetSub == "lights/mode")
   {
     
-    if (msgSub == "Glow") 
-    { _modeCur = 0;
-      _modePresetSlotCur = 0; }       // TEMP way of doing it.. until user preset slot changing is implemented.
+    if (msgSub == "Glow") { 
+      _modeCur = 0;
+      _modePresetSlotCur = 0;         // TEMP way of doing it.. until user preset slot changing is implemented.
     //else if (msgSub == "Sunrise") 
     //{ _modeCur = 1; }
-    else if (msgSub == "Morning") 
-    { _modeCur = 2;
-      _modePresetSlotCur = 1; }
-    else if (msgSub == "Day") 
-    { _modeCur = 3;
-      _modePresetSlotCur = 2; }
-    else if (msgSub == "Working") 
-    { _modeCur = 4;
-      _modePresetSlotCur = 3; }
-    else if (msgSub == "Evening") 
-    { _modeCur = 5;
-      _modePresetSlotCur = 4; }
-    //else if (msgSub == "Sunset") 
-    //{ _modeCur = 6; }
-    else if (msgSub == "Night") 
-    { _modeCur = 7;
-      _modePresetSlotCur = 5; }
-    else if (msgSub == "Effect") 
-    { _modeCur = 8; }
-    else { }
+    } else if (msgSub == "Morning") {
+      _modeCur = 2;
+      _modePresetSlotCur = 1;
+    } else if (msgSub == "Day") {
+      _modeCur = 3;
+      _modePresetSlotCur = 2;
+    } else if (msgSub == "Working") {
+      _modeCur = 4;
+      _modePresetSlotCur = 3;
+    } else if (msgSub == "Evening") { 
+      _modeCur = 5;
+      _modePresetSlotCur = 4;
+    //} else if (msgSub == "Sunset") { 
+    //  _modeCur = 6; 
+    } else if (msgSub == "Night") {
+      _modeCur = 7;
+      _modePresetSlotCur = 5;
+    } else if (msgSub == "Effect") {
+      _modeCur = 8;
+      _modePresetSlotCur = 6;
+    } else { }
 
     _modeString = msgSub; // redundant ???
     
@@ -96,7 +97,7 @@ void receiveMessage(uint32_t from, String msg)
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/sunrise") {
-    // trigger only
+    // trigger only (local)
     // note: the single mesh msg of 'sunrise' is used for synced global sunrise
     if (msgSub == LIGHTS_ON) {
       //start sunrise
@@ -122,7 +123,7 @@ void receiveMessage(uint32_t from, String msg)
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/sunset") {
-    // trigger only
+    // trigger only (local)
     // note: the single mesh msg of 'sunset' is used for synced global sunset
     if (msgSub == LIGHTS_ON) {
       //start sunset
@@ -138,33 +139,58 @@ void receiveMessage(uint32_t from, String msg)
   /*
    * Breath : (noun) Refers to a full cycle of breathing. It can also refer to the air that is inhaled or exhaled.
    */
-  else if (targetSub == "lights/breath")
+  else if (targetSub == "breath")
   {
+    // trigger only (global synced)
+    // note: the single mesh msg of 'breath' is used for synced global breathing
     if (msgSub == LIGHTS_ON) {
-      
-      //publishMode(true);
+      _isBreathingSynced = true;                    // set sync to global
+      _isBreathing = true;                          // start synced breathing
     }
     else if (msgSub == LIGHTS_OFF) {
-      
-      //publishMode(true);
+      _isBreathing = false;                         // stop breathing
+      _isBreathingSynced = false;                   // set sync to local
     }
+    //publishBreath(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
-  else if (targetSub == "lights/breath/xyz")
+  else if (targetSub == "lights/breath")
+  {
+    // trigger only (local)
+    // note: the single mesh msg of 'breath' is used for synced global breathing
+    if (msgSub == LIGHTS_ON) {
+      _isBreathingSynced = false;                   // set sync to local
+      _isBreathing = true;                          // start local breathing
+    }
+    else if (msgSub == LIGHTS_OFF) {
+      _isBreathing = false;                         // stop breathing
+      _isBreathingSynced = false;                   // set sync to local
+    }
+    //publishLightsBreath(false);
+    //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
+  }
+  else if (targetSub == "lights/breath/xyz/set")
   {
     // msg will contain xyz coords for origin position within the house
+    //
+    //publishLightsBreathXyzSet(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "lights/breath/xyz/mode")
   {
     // set positional mode
-    // independent, global
+    if (msgSub == "Independent") {
+      
+    } else if (msgSub == "Global") {
+      
+    }
+    //publishLightsBreathXyzMode(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if(targetSub == "debug/general/set") 
   {
-    if(msg == LIGHTS_ON) { DEBUG_GEN = true; } 
-    else if(msg == LIGHTS_OFF) { DEBUG_GEN = false; }
+    if (msg == LIGHTS_ON) { DEBUG_GEN = true; } 
+    else if (msg == LIGHTS_OFF) { DEBUG_GEN = false; }
     publishDebugGeneralState(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
@@ -184,8 +210,8 @@ void receiveMessage(uint32_t from, String msg)
   }
   else if(targetSub == "debug/comms/set") 
   {
-    if(msg == LIGHTS_ON) { DEBUG_COMMS = true; } 
-    else if(msg == LIGHTS_OFF) { DEBUG_COMMS = false; }
+    if (msg == LIGHTS_ON) { DEBUG_COMMS = true; } 
+    else if (msg == LIGHTS_OFF) { DEBUG_COMMS = false; }
     publishDebugCommsState(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
