@@ -9,14 +9,12 @@ void mode1() {
     //sunRise();
 
     //TEMP
-    for(int i = ledSegment[0].first; i <= ledSegment[0].last; i++) {
-      leds[i] = startColor_RGB;
+    for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
+      strip.SetPixelColor(i, _rgbStartColor);
     }
-    fill_gradient_RGB(leds, ledSegment[1].first, CRGB(32, 32, 32), ledSegment[1].last, CRGB::Black);
-    for(int i = ledSegment[2].first; i <= ledSegment[2].last; i++) {
-      leds[i] = CRGB::Black;
+    for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
+      strip.SetPixelColor(i, _rgbBlack);
     }
-    fill_gradient_RGB(leds, ledSegment[3].first, CRGB::Black, ledSegment[3].last, CRGB(32, 32, 32) );
     //END TEMP
   
 } //END mode1
@@ -25,7 +23,6 @@ void mode1() {
 void mode6() {
   
   //name should be sunset!
-    fadeToBlackBy( leds, _ledNum, 100);
   
 } //END mode6
 
@@ -133,4 +130,3 @@ void mode6() {
 //*/
 //  
 //} //END sunRise
-

@@ -39,29 +39,25 @@ void loopModes() {
     else if(_modeCur == 8) {  mode8(); }
   } 
   else { 
-    fadeToBlackBy( leds, _ledNum, 30); 
+    FadeAll(4);
   }
 
-  // TEMP
-  //leds[0] = CRGB::Red;
-  //leds[0] = CRGB::Black;                    // hack
 }
-
 
 /*----------------------------modes----------------------------*/
 void mode0() {
   //name should be glow!
-  //default is static (with a few sparkles)
+  //default is static (mabye with a few sparkles)
     for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
-      leds[i] = startColor_RGB;
+      //leds[i] = startColor_RGB;
+      strip.SetPixelColor(i, _rgbGlow);
     }
-    fill_gradient_RGB(leds, ledSegment[2].first, CRGB(32, 32, 32), ledSegment[2].last, CRGB::Black);
+    FillGradientRGB(ledSegment[2].first, ledSegment[2].total, _rgbGlow, _rgbBlack);
     for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
-      leds[i] = CRGB::Black;
+      strip.SetPixelColor(i, _rgbBlack);
     }
-    fill_gradient_RGB(leds, ledSegment[4].first, CRGB::Black, ledSegment[4].last, CRGB(32, 32, 32) );
+    FillGradientRGB(ledSegment[4].first, ledSegment[4].total, _rgbBlack, _rgbGlow);
     
-    //addGlitter(80);
 }
 
 //
@@ -69,31 +65,32 @@ void mode0() {
 void mode2() {
   //name should be morning!
     for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
-      leds[i] = CRGB::Yellow;
+      strip.SetPixelColor(i, _rgbYellow);
     }
-    fill_gradient_RGB(leds, ledSegment[2].first, CRGB::Yellow, ledSegment[2].last, CRGB::Black);
+    FillGradientRGB(ledSegment[2].first, ledSegment[2].total, _rgbYellow, _rgbBlack);
     for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
-      leds[i] = CRGB::Black;
+      strip.SetPixelColor(i, _rgbBlack);
     }
-    fill_gradient_RGB(leds, ledSegment[4].first, CRGB::Black, ledSegment[4].last, CRGB::Yellow );
+    FillGradientRGB(ledSegment[4].first, ledSegment[4].total, _rgbBlack, _rgbYellow);
 }
 
 void mode3() {
   //name should be day!
     for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
-      leds[i] = CRGB::Green;
+      strip.SetPixelColor(i, _rgbGreen);
     }
-    fill_gradient_RGB(leds, ledSegment[2].first, CRGB::Green, ledSegment[2].last, CRGB::Yellow);
+    FillGradientRGB(ledSegment[2].first, ledSegment[2].total, _rgbGreen, _rgbYellow);
     for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
-      leds[i] = CRGB::Yellow;
+      strip.SetPixelColor(i, _rgbYellow);
     }
-    fill_gradient_RGB(leds, ledSegment[4].first, CRGB::Yellow, ledSegment[4].last, CRGB::Green );
+    FillGradientRGB(ledSegment[4].first, ledSegment[4].total, _rgbYellow, _rgbGreen);
 }
 
 void mode4() {
   //name should be working!
-    fill_solid( leds, _ledNum, CRGB::White);  // TEMP colour
-    //leds[0] = CRGB::Black;                    // hack
+  for(int i = ledSegment[1].first; i <= ledSegment[4].last; i++) {
+    strip.SetPixelColor(i, _rgbWhite);
+  }
 /*
  //sub temperature modes later.. see util/setColTemp and cycleColTemp
   if(_mode0_sub == 0) {
@@ -138,8 +135,10 @@ void mode4() {
 
 void mode5() {
   //name should be evening!
-    fill_solid( leds, _ledNum, CRGB(128, 64, 64));
-    //leds[0] = CRGB::Black;                    // hack
+  RgbColor col(128, 64, 64);
+  for(int i = ledSegment[1].first; i <= ledSegment[4].last; i++) {
+    strip.SetPixelColor(i, col);
+  }
 }
 
 //
@@ -147,19 +146,17 @@ void mode5() {
 void mode7() {
   //name should be night!
    for(int i = ledSegment[1].first; i <= ledSegment[1].last; i++) {
-      leds[i] = CRGB::Black;
+      strip.SetPixelColor(i, _rgbBlack);
     }
-    fill_gradient_RGB(leds, ledSegment[2].first, CRGB::Black, ledSegment[2].last, CRGB::White);
+    FillGradientRGB(ledSegment[2].first, ledSegment[2].total, _rgbBlack, _rgbWhite);
     for(int i = ledSegment[3].first; i <= ledSegment[3].last; i++) {
-      leds[i] = CRGB::White;
+      strip.SetPixelColor(i, _rgbWhite);
     }
-    fill_gradient_RGB(leds, ledSegment[4].first, CRGB::White, ledSegment[4].last, CRGB::Black );
+    FillGradientRGB(ledSegment[4].first, ledSegment[4].total, _rgbWhite, _rgbBlack);
 }
 
 void mode8() {
   //name should be changing!
-    fill_solid( leds, _ledNum, CRGB(0, 0, 255));
-    //leds[0] = CRGB::Black;                    // hack
 }
 
 
@@ -172,7 +169,8 @@ const unsigned long _breathRiseFallHoldIntervalMillis = 1;    //breath rise/fall
 unsigned long _breathRiseFallPrevMillis = 0;                  //previous time for reference
 int _breathRiseFallCounter = 0;                               //eg. 0-17
 boolean _breathRiseFallDirection = true;                      //direction true-rise, false-fall
-CRGB c;
+//CRGB c;
+RgbColor c;
 
 void loopBreathing() {
   //'breathing'
@@ -190,19 +188,23 @@ void loopBreathing() {
  * only see out of the corner of you eye.
  */
 uint8_t bBpm = 12;
-uint8_t bMax = ( (ledSegment[1].total / 4) - 1 );
+uint8_t bMax = ( (ledSegment[2].total / 4) - 1 );
 uint8_t bPeak;
 
 void breathRiseFall2() {
   
-  fill_solid( leds, _ledNum, CRGB::Black);
+  //fill_solid( leds, _ledNum, CRGB::Black);
   //leds = CRGB::Black;
+  strip.ClearTo(_rgbBlack);
   
   bPeak = beatsin8( bBpm, 1, bMax); //bpm, min, max
   
   //fade bot to top
   //ledsLeft( 1, bPeak ).fill_gradient_RGB( CRGB::White, CRGB::Black );
-  fill_gradient_RGB(leds, ledSegment[1].first, CRGB::White, ledSegment[4].last, CRGB::Black );
+
+  //strip.SetPixelColor(i, _rgbWhite);
+  
+  FillGradientRGB(ledSegment[2].first, bPeak, _rgbWhite, _rgbBlack);  // left
+  FillGradientRGB((ledSegment[4].first+bPeak), ledSegment[4].total, _rgbBlack, _rgbWhite);  // right
+  
 }
-
-

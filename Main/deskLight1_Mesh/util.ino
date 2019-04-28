@@ -65,19 +65,19 @@ void colorTempCatch() {
  This places different coloured lights at the ends of the LED strip(s) segments for quick visual feedback of calculations
  */
 void checkSegmentEndpoints() {
-  fill_solid( leds, _ledNum, CRGB(0,0,0));
+  strip.ClearTo(_rgbBlack);
   
-  leds[ledSegment[1].first] = CRGB(255, 0, 0);
-  leds[ledSegment[1].last] = CRGB(255, 0, 0);
+  strip.SetPixelColor(ledSegment[1].first, _rgbRed);
+  strip.SetPixelColor(ledSegment[1].last, _rgbRed);
   
-  leds[ledSegment[2].first] = CRGB(0, 255, 0);
-  leds[ledSegment[2].last] = CRGB(0, 255, 0);
+  strip.SetPixelColor(ledSegment[2].first, _rgbGreen);
+  strip.SetPixelColor(ledSegment[2].last, _rgbGreen);
   
-  leds[ledSegment[3].first] = CRGB(0, 0, 255);
-  leds[ledSegment[3].last] = CRGB(0, 0, 255);
+  strip.SetPixelColor(ledSegment[3].first, _rgbBlue);
+  strip.SetPixelColor(ledSegment[3].last, _rgbBlue);
   
-  leds[ledSegment[4].first] = CRGB(0, 255, 0);
-  leds[ledSegment[4].last] = CRGB(0, 255, 0);
+  strip.SetPixelColor(ledSegment[4].first, _rgbRed);
+  strip.SetPixelColor(ledSegment[4].last, _rgbRed);
 }
 
 /*
@@ -87,8 +87,14 @@ void checkSegmentEndpoints() {
  This sets the first LED to show the current colour temperature
  */
 void showColorTempPx() {
-  leds[1] = _colorTempCur;                    // show indicator pixel
+  //leds[1] = _colorTempCur;                    // show indicator pixel
   //leds[0] = TEMPERATURE_1;                    // show indicator pixel
 }
 
-
+/*
+ * Alternative map function that uses float (instead of int)
+ */
+float mapf(float x, float in_min, float in_max, float out_min, float out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}

@@ -12,6 +12,7 @@ void setupUserInputs() {
     _touchActive = true;
     if (DEBUG_USERINPUT) { Serial.println("MPR121 device init OK!"); }
   }
+
   delay(100);
 }
 
@@ -115,5 +116,3 @@ void touch5pressed() {                          // touch sensor 5 - brightness d
 }
 
 /*---------------touch sensors MPR121 - released--------------*/
-
-

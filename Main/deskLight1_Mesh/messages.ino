@@ -8,19 +8,6 @@ void receiveMessage(uint32_t from, String msg)
   String targetSub = msg.substring(0, firstMsgIndex);
   String msgSub = msg.substring(firstMsgIndex+1);
 
-/*
-  DEBUG_OVERLAY = checkBool(_integer1FromSerial);
-  setSunRise(_integer1FromSerial, _integer2FromSerial);             //???
-  _sunRiseEnabled = true;
-  //setSunSet(_integer1FromSerial, _integer2FromSerial);             //???
-  _sunRiseEnabled = false;
-  _sunRiseEnabled = checkBool(_integer1FromSerial);
-  _sunSetEnabled = checkBool(_integer1FromSerial);
-  setGlobalBrightness(_integer1FromSerial);
-  _modeCur = _integer1FromSerial;
-  _onOff = checkBool(_integer1FromSerial);
-*/
-
   if (targetSub == "lights/light/switch")
   {
     if (msgSub == LIGHTS_ON)
@@ -76,14 +63,6 @@ void receiveMessage(uint32_t from, String msg)
     else { }
 
     _modeString = msgSub; // redundant ???
-    
-    //for (int i = 0; i < _modeNum; i++) {
-    //  if (msgSub == modeName[i]) {
-    //    _modeCur = i;
-    //    _modeString = msgSub;
-    //    break;
-    //  }
-    //}
     
     //publishMode(true);  // too much bounce-back on the network
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
@@ -186,24 +165,28 @@ void receiveMessage(uint32_t from, String msg)
   {
     if(msg == LIGHTS_ON) { DEBUG_GEN = true; } 
     else if(msg == LIGHTS_OFF) { DEBUG_GEN = false; }
+    publishDebugGeneralState(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "debug/overlay/set")
   {
     if (msgSub == LIGHTS_ON) { DEBUG_OVERLAY = true; }
     else if (msgSub == LIGHTS_OFF) { DEBUG_OVERLAY = false; }
+    publishDebugOverlayState(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if (targetSub == "debug/meshsync/set")
   {
     if (msgSub == LIGHTS_ON) { DEBUG_MESHSYNC = true; }
     else if (msgSub == LIGHTS_OFF) { DEBUG_MESHSYNC = false; }
+    publishDebugMeshsyncState(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   else if(targetSub == "debug/comms/set") 
   {
     if(msg == LIGHTS_ON) { DEBUG_COMMS = true; } 
     else if(msg == LIGHTS_OFF) { DEBUG_COMMS = false; }
+    publishDebugCommsState(false);
     //if (DEBUG_COMMS) { Serial.print(targetSub); Serial.print(" : "); Serial.println(msgSub); }
   }
   
@@ -274,6 +257,21 @@ void publishEffect(bool save)
   if (save == true) { shouldSaveSettings = true; }
 }
 
+void publishDebugGeneralState(bool save)
+{
+  if (DEBUG_COMMS) { Serial.print("publishDebugGeneralState "); }
+  String msg = "debug/general/status";
+  msg += ":"; //..just so we are all sure what is going on here !?
+  if (DEBUG_GEN == false) {
+    msg += "OFF";
+  } else if (DEBUG_GEN == true) {
+    msg += "ON";
+  }
+  mesh.sendSingle(id, msg);
+  if (DEBUG_COMMS) { Serial.println(msg); }
+  if (save == true) { shouldSaveSettings = true; }
+}
+
 void publishDebugOverlayState(bool save)
 {
   if (DEBUG_COMMS) { Serial.print("publishDebugOverlayState "); }
@@ -289,4 +287,32 @@ void publishDebugOverlayState(bool save)
   if (save == true) { shouldSaveSettings = true; }
 }
 
+void publishDebugMeshsyncState(bool save)
+{
+  if (DEBUG_COMMS) { Serial.print("publishDebugMeshsyncState "); }
+  String msg = "debug/meshsync/status";
+  msg += ":"; //..just so we are all sure what is going on here !?
+  if (DEBUG_MESHSYNC == false) {
+    msg += "OFF";
+  } else if (DEBUG_MESHSYNC == true) {
+    msg += "ON";
+  }
+  mesh.sendSingle(id, msg);
+  if (DEBUG_COMMS) { Serial.println(msg); }
+  if (save == true) { shouldSaveSettings = true; }
+}
 
+void publishDebugCommsState(bool save)
+{
+  if (DEBUG_COMMS) { Serial.print("publishDebugCommsMeshsyncState "); }
+  String msg = "debug/comms/status";
+  msg += ":"; //..just so we are all sure what is going on here !?
+  if (DEBUG_COMMS == false) {
+    msg += "OFF";
+  } else if (DEBUG_COMMS == true) {
+    msg += "ON";
+  }
+  mesh.sendSingle(id, msg);
+  if (DEBUG_COMMS) { Serial.println(msg); }
+  if (save == true) { shouldSaveSettings = true; }
+}
