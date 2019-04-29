@@ -117,3 +117,16 @@ void publishDebugCommsState(bool save)
   if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
+
+void publishStatusAll{(bool save) {
+  
+  if (DEBUG_COMMS) { Serial.print("publishStatusAll "); }
+  publishState(save);
+  publishBrightness(save);
+  publishMode(save);
+  publishColorTemp(save);
+  publishDebugGeneralState(save);
+  publishDebugOverlayState(save);
+  publishDebugMeshsyncState(save);
+  publishDebugCommsState(save);
+}
