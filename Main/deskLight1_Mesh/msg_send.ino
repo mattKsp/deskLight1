@@ -118,9 +118,9 @@ void publishDebugCommsState(bool save)
   if (save == true) { shouldSaveSettings = true; }
 }
 
-void publishStatusAll{(bool save) {
+void publishStatusAll(bool save) {
   
-  if (DEBUG_COMMS) { Serial.print("publishStatusAll "); }
+  if (DEBUG_COMMS) { Serial.println("publishStatusAll "); }
   publishState(save);
   publishBrightness(save);
   publishMode(save);
