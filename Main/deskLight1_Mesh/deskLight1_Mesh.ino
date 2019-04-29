@@ -30,7 +30,7 @@
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_Mesh";
-const String _progVers = "0.420";             // tweaks and breathing
+const String _progVers = "0.421";             // bits'n'pieces
 
 boolean DEBUG_GEN = false;                    // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
@@ -69,6 +69,7 @@ u16 touch_status_flag[CHANNEL_NUM] = { 0 };   // u16 = unsigned short
 /*----------------------------buttons----------------------------*/
 
 /*----------------------------LED----------------------------*/
+// rectangle
 const uint16_t _ledNum = 96;                  // NeoPixelBus - 95 + 1 LEDs
 NeoPixelBrightnessBus<NeoGrbFeature, Neo800KbpsMethod> strip(_ledNum);
 
@@ -78,8 +79,6 @@ typedef struct {
   byte total;
 } LED_SEGMENT;
 const int _segmentTotal = 5;                  // Xm strip with LEDs (4 + 1)
-uint8_t _ledGlobalBrightnessCur = 255;        // current global brightness - adjust this
-uint8_t _ledBrightnessIncDecAmount = 10;      // the brightness amount to increase or decrease
 LED_SEGMENT ledSegment[_segmentTotal] = { 
   { 0, 0, 1 },
   { 1, 12, 12 }, 
@@ -88,6 +87,8 @@ LED_SEGMENT ledSegment[_segmentTotal] = {
   { 61, 95, 35 }
 };
 
+uint8_t _ledGlobalBrightnessCur = 255;        // current global brightness - adjust this
+uint8_t _ledBrightnessIncDecAmount = 10;      // the brightness amount to increase or decrease
 uint8_t _gHue2 = 0;
 
 RgbColor _rgbClearBlueSky(64, 156, 255);      // 20000 Kelvin - ClearBlueSky = 0x409CFF - 64, 156, 255
@@ -131,7 +132,6 @@ RgbColor _rgbColorTempCur(_rgbStandardFluorescent); // use this one in day-to-da
 
 /*----------------------------Mesh----------------------------*/
 painlessMesh  mesh;
-String _modeString = "Working";
 uint32_t id = DEVICE_ID_BRIDGE1;
 
 void receivedCallback(uint32_t from, String &msg ) {
@@ -219,7 +219,6 @@ void loop() {
   
   if (DEBUG_OVERLAY) {
     showSegmentEndpoints();
-    //strip.SetPixelColor(0, _rgbGreen);
     showColorTempPx();
   } else {
     strip.SetPixelColor(0, _rgbBlack);        // modes are responsible for all other leds

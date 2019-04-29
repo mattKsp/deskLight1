@@ -48,10 +48,10 @@ void brightnessRolloverCatch() {
  */
 void setColorTemp(int i) {
   _colorTempCur = i;
-  setColorTempHslCur(i);
   colorTempCatch();
+  setColorTempRgbCur(i);
 }
-void setColorTempHslCur(int i) {
+void setColorTempRgbCur(int i) {
   if (i == 0) {
     _rgbColorTempCur = _rgbWarmFluorescent;
   } else if (i == 1) {
@@ -63,12 +63,13 @@ void setColorTempHslCur(int i) {
 void cycleColorTemp() {
   _colorTempCur += 1;
   colorTempCatch();
+  setColorTempRgbCur(_colorTempCur);
 }
 void colorTempCatch() {
   if ( (_colorTempCur >= _colorTempNum) || (_colorTempCur < 0) ) { 
     // rollover
     _colorTempCur = 0; 
-    setColorTempHslCur(0); 
+    //setColorTempRgbCur(0); 
   }  
 }
 

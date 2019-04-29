@@ -1,6 +1,7 @@
 /*----------------------------display----------------------------*/
 
 void setupLEDs() {
+  
   strip.Begin();                                  // NeoPixelBus
   strip.Show();                                   // NeoPixelBus
 
