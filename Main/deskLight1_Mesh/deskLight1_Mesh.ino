@@ -30,7 +30,7 @@
 
 /*----------------------------system----------------------------*/
 const String _progName = "deskLight1_Mesh";
-const String _progVers = "0.423";             // fix dumb mistake
+const String _progVers = "0.424";             // 
 
 boolean DEBUG_GEN = false;                    // realtime serial debugging output - general
 boolean DEBUG_OVERLAY = false;                // show debug overlay on leds (eg. show segment endpoints, center, etc.)
@@ -141,14 +141,7 @@ void receivedCallback(uint32_t from, String &msg ) {
 
 void newConnectionCallback(uint32_t nodeId) {
   if (runonce == true) {
-    publishState(false);
-    publishBrightness(false);
-    publishMode(false);
-    publishColorTemp(false);
-    publishDebugGeneralState(false);
-    publishDebugOverlayState(false);
-    publishDebugMeshsyncState(false);
-    publishDebugCommsState(false);
+    publishStatusAll(false);
     runonce = false;
   }
 

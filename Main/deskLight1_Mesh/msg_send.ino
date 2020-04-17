@@ -1,125 +1,67 @@
 /*----------------------------messages - publish----------------------------*/
-void publishState(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishState "); }
-  String msg = "lights/light/status";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  if(_onOff == false) {
-    msg += "OFF";
-  } else {
-    msg += "ON";
-  }
+void meshSendSingle(String nom, String msg, bool save) {
+  if (DEBUG_COMMS) { Serial.print(nom); Serial.print(" - "); }
   mesh.sendSingle(id, msg);
   if (DEBUG_COMMS) { Serial.println(msg); }
   if (save == true) { shouldSaveSettings = true; }
 }
-
-void publishBrightness(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishBrightness "); }
-  String msg = "lights/brightness/status";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  msg += String(_ledGlobalBrightnessCur);
-  mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishMeshMsgSingleState(String nom, String addr, boolean state, bool save) {
+  addr += ":"; //..just so we are all sure what is going on here !?
+  if (state == false) {  addr += "OFF"; }
+  else if (state == true) { addr += "ON"; }
+  meshSendSingle(nom, addr, save);
+}
+void publishMeshMsgSingleString(String nom, String addr, String msg, bool save) {
+  addr += ":"; //..just so we are all sure what is going on here !?
+  addr += msg;
+  meshSendSingle(nom, addr, save);
+}
+void publishMeshMsgSingleColor(String nom, String addr, uint8_t r, uint8_t g, uint8_t b, bool save) {
+  addr += ":"; //..just so we are all sure what is going on here !?
+  addr += String(r);
+  addr += ",";
+  addr += String(g);
+  addr += ",";
+  addr += String(b);
+  meshSendSingle(nom, addr, save);
 }
 
-void publishMode(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishMode "); }
-  String msg = "lights/mode";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  msg += modeName[_modeCur];
-  mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+/*----------------------------messages - publish - main---------------------*/
+void publishState(bool save) {
+  publishMeshMsgSingleState("publishState", "lights/light/status", _onOff, save);
 }
 
-void publishColorTemp(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishColorTemp "); }
-  String msg = "lights/mode/coltemp";   // NOTE this needs to be 'colTemp'
-  msg += ":"; //..just so we are all sure what is going on here !?
-  msg += colorTempName[_colorTempCur];
-  //mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishBrightness(bool save) {
+  publishMeshMsgSingleString("publishBrightness", "lights/brightness/status", String(_ledGlobalBrightnessCur), save);
 }
 
-void publishEffect(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishEffect "); }
-  String msg = "lights/mode/effect";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  //msg += ;
-  //mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishMode(bool save) {
+  publishMeshMsgSingleString("publishMode", "lights/mode", modeName[_modeCur], save);
 }
 
-void publishDebugGeneralState(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishDebugGeneralState "); }
-  String msg = "debug/general/status";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  if (DEBUG_GEN == false) {
-    msg += "OFF";
-  } else if (DEBUG_GEN == true) {
-    msg += "ON";
-  }
-  mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishColorTemp(bool save) {
+  publishMeshMsgSingleString("publishColorTemp", "lights/mode/coltemp", colorTempName[_colorTempCur], save);
 }
 
-void publishDebugOverlayState(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishDebugOverlayState "); }
-  String msg = "debug/overlay/status";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  if (DEBUG_OVERLAY == false) {
-    msg += "OFF";
-  } else if (DEBUG_OVERLAY == true) {
-    msg += "ON";
-  }
-  mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishEffect(bool save) { }
+
+void publishDebugGeneralState(bool save) {
+  publishMeshMsgSingleState("publishDebugGeneralState", "debug/general/status", DEBUG_GEN, save);
 }
 
-void publishDebugMeshsyncState(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishDebugMeshsyncState "); }
-  String msg = "debug/meshsync/status";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  if (DEBUG_MESHSYNC == false) {
-    msg += "OFF";
-  } else if (DEBUG_MESHSYNC == true) {
-    msg += "ON";
-  }
-  mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishDebugOverlayState(bool save) {
+  publishMeshMsgSingleState("publishDebugOverlayState", "debug/overlay/status", DEBUG_OVERLAY, save);
 }
 
-void publishDebugCommsState(bool save)
-{
-  if (DEBUG_COMMS) { Serial.print("publishDebugCommsMeshsyncState "); }
-  String msg = "debug/comms/status";
-  msg += ":"; //..just so we are all sure what is going on here !?
-  if (DEBUG_COMMS == false) {
-    msg += "OFF";
-  } else if (DEBUG_COMMS == true) {
-    msg += "ON";
-  }
-  mesh.sendSingle(id, msg);
-  if (DEBUG_COMMS) { Serial.println(msg); }
-  if (save == true) { shouldSaveSettings = true; }
+void publishDebugMeshsyncState(bool save) {
+  publishMeshMsgSingleState("publishDebugMeshsyncState", "debug/meshsync/status", DEBUG_MESHSYNC, save);
+}
+
+void publishDebugCommsState(bool save) {
+  publishMeshMsgSingleState("publishDebugCommsState", "debug/comms/status", DEBUG_COMMS, save);
 }
 
 void publishStatusAll(bool save) {
-  
   if (DEBUG_COMMS) { Serial.println("publishStatusAll "); }
   publishState(save);
   publishBrightness(save);
