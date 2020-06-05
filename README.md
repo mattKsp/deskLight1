@@ -1,5 +1,6 @@
 # deskLight1
-LED desk light, by Thurstan
+LED desk light, by Thurstan <br> 
+https://hackaday.io/project/20278-desklight1
 
 Repository is an Arduino project
 
